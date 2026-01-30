@@ -16,3 +16,10 @@ export async function login(data: UserLoginRequest) {
 
   return res.json(); // EVUELVE tokens + user
 }
+
+export async function logout () {
+  // Implementar la lógica de cierre de sesión si es necesario
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("user");
+  document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}
