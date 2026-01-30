@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -29,15 +29,29 @@ export function HeroTable<T extends { id: string | number }>({
   data,
   actions,
 }: HeroTableProps<T>) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🚨 CLAVE: evita hydration mismatch
+  if (!mounted) return null;
+
   return (
-    <div className="bg-white rounded-xl shadow-sm">
+    <div className="rounded-xl shadow-sm bg-(--color-page)">
       <Table
         aria-label="ERP Table"
-        className="w-full"
         removeWrapper
+        className="w-full"
         classNames={{
-          th: "bg-(--color-table-header-bg) text-white text-sm font-semibold",
-          thead: "border-b border-black/10",
+          th: `
+            bg-(--color-table-header-bg)
+            text-(--color-table-header-text)
+            text-sm font-semibold
+          `,
+          thead: "border-b border-black/10 dark:border-white/10",
+          td: "text-sm",
         }}
       >
         {/* HEADER */}
@@ -45,7 +59,7 @@ export function HeroTable<T extends { id: string | number }>({
           {(column) => (
             <TableColumn
               key={String(column.key)}
-              className="text-sm font-semibold text-gray-600 text-left px-4 py-3"
+              className="px-4 py-3 text-left"
             >
               {column.label}
             </TableColumn>
@@ -55,25 +69,26 @@ export function HeroTable<T extends { id: string | number }>({
         {/* BODY */}
         <TableBody items={data} emptyContent="Sin datos">
           {(item) => (
-            <TableRow key={item.id} className="hover:bg-gray-50 transition">
+            <TableRow
+              key={item.id}
+              className="
+                hover:bg-black/5
+                dark:hover:bg-white/5
+                transition
+              "
+            >
               {(columnKey) => {
                 const column = columns.find(
                   (c) => String(c.key) === String(columnKey),
                 );
 
-                if (!column) {
-                  return (
-                    <TableCell className="px-4 py-3 text-gray-400">—</TableCell>
-                  );
-                }
-
                 return (
                   <TableCell
-                    className={`px-4 py-3 text-sm text-gray-700 text-${
-                      column.align ?? "left"
+                    className={`px-4 py-3 text-${
+                      column?.align ?? "start"
                     }`}
                   >
-                    {column.render
+                    {column?.render
                       ? column.render(item)
                       : String(getKeyValue(item, columnKey))}
                   </TableCell>

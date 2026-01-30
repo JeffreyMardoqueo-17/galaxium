@@ -57,29 +57,28 @@ export default function CategoryPage() {
         <div className="mb-4 p-2 bg-red-200 text-red-800 rounded">{error}</div>
       )}
 
-     <HeroTable
-  data={categories}
-  columns={[
-    { key: "id", label: "ID" },
-    { key: "name", label: "Nombre" },
-    {
-      key: "createdAt",
-      label: "Creada",
-      render: (item) => (
-        <span className="text-gray-500">
-          {new Date(item.createdAt).toLocaleString()}
-        </span>
-      ),
-    },
-  ]}
-  actions={(item) => (
-    <div className="flex gap-2">
-      <button className="text-blue-600">Editar</button>
-      <button className="text-red-600">Eliminar</button>
-    </div>
-  )}
-/>
-
+      <HeroTable
+        data={categories}
+        columns={[
+          { key: "id", label: "ID" },
+          { key: "name", label: "Nombre" },
+          {
+            key: "createdAt",
+            label: "Creada",
+            render: (item) => (
+              <span className="text-gray-500">
+                {new Date(item.createdAt).toLocaleString()}
+              </span>
+            ),
+          },
+        ]}
+        actions={(item) => (
+          <div className="flex gap-2">
+            <button className="text-blue-600">Editar</button>
+            <button className="text-red-600">Eliminar</button>
+          </div>
+        )}
+      />
 
       {/* Modal de creación */}
       <FormModal

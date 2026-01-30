@@ -1,41 +1,47 @@
 @import "tailwindcss";
 
+/* ======================
+   LIGHT THEME (default)
+====================== */
 :root {
-  /* ======================
-     BACKGROUNDS
-  ====================== */
   --color-body: #f8f8fa;
   --color-page: #ffffff;
 
-  /* ======================
-     SIDEBAR
-  ====================== */
   --color-sidebar: #273363;
   --color-sidebar-hover: #6f799b;
-  --color-sidebar-link: #2d3652;
-  /* ======================
-     TEXTOS
-  ====================== */
+
   --color-text-title: #2d2d2c;
   --color-text-table: #9c9ca7;
   --color-text-table-header: #c4c4c4;
 
-  /* ======================
-     STATES
-  ====================== */
-  --color-success: #22c55e;
-  --color-warning: #facc15;
-  --color-danger: #ef4444;
-
-  /*++++++ bg de botnes ++++++*/
   --color-button-bg: #273363;
-  --color-button-hover-bg: #3A458A;
+  --color-button-hover-bg: #3a458a;
 
-  /* /////color de las tablas hober */
   --color-table-header-bg: #f8f8fa;
 }
 
+/* ======================
+   DARK THEME
+====================== */
+.dark {
+  --color-body: #040a1c;          /* Fondo principal más oscuro */
+  --color-page: #0a162f;          /* Fondo contenido un poco más claro */
 
+  --color-sidebar: #040a1c;       /* Sidebar igual al fondo más oscuro */
+  --color-sidebar-hover: #28304f; /* Hover sidebar suave */
+
+  --color-text-title: #d1d7e0;
+  --color-text-table: #9aa5b9;
+  --color-text-table-header: #bcc5d3;
+
+  --color-button-bg: #1f2a4b;
+  --color-button-hover-bg: #324069;
+
+  --color-table-header-bg: #28304f;
+}
+
+
+/* BASE */
 body {
   background-color: var(--color-body);
   color: var(--color-text-title);
