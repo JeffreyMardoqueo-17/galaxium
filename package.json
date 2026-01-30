@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@heroui/react": "^2.8.8",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/themes": "^3.2.1",
+    "framer-motion": "^12.29.2",
     "fs": "^0.0.1-security",
     "https": "^1.0.0",
     "lucide-react": "^0.563.0",

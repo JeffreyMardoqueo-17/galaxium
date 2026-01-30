@@ -4,13 +4,13 @@
   /* ======================
      BACKGROUNDS
   ====================== */
-  --color-body: #f6f6ff;
-  --color-page: #fefeff;
+  --color-body: #f8f8fa;
+  --color-page: #ffffff;
 
   /* ======================
      SIDEBAR
   ====================== */
-  --color-sidebar: #343e5a;
+  --color-sidebar: #273363;
   --color-sidebar-hover: #6f799b;
   --color-sidebar-link: #2d3652;
   /* ======================
@@ -26,7 +26,15 @@
   --color-success: #22c55e;
   --color-warning: #facc15;
   --color-danger: #ef4444;
+
+  /*++++++ bg de botnes ++++++*/
+  --color-button-bg: #273363;
+  --color-button-hover-bg: #3A458A;
+
+  /* /////color de las tablas hober */
+  --color-table-header-bg: #f8f8fa;
 }
+
 
 body {
   background-color: var(--color-body);

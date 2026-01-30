@@ -7,7 +7,8 @@ import { SIDEBAR_ITEMS } from "@/config/sidebar";
 
 import { useEffect, useState } from "react";
 import { getCurrentUser } from "@/services/user.service";
-import { UserResponse } from "@/types/user";
+import { UserResponse } from "@/types/user"
+import { HeroUIProvider } from "@heroui/react";
 
 export default function ProtectedLayout({
   children,
@@ -42,6 +43,7 @@ export default function ProtectedLayout({
   }, []);
 
   return (
+    <HeroUIProvider>
     <div className="flex h-screen bg-(--color-body)">
       {/* ======================
           SIDEBAR
@@ -106,6 +108,7 @@ export default function ProtectedLayout({
           </div>
         </main>
       </div>
-    </div>
+      </div>
+    </HeroUIProvider>
   );
 }
