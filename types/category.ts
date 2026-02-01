@@ -1,6 +1,7 @@
 export interface CategoryRead{
     id: number;
     name: string;
+    code: string;
     createdAt: string;
 }
 
