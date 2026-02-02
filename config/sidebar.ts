@@ -33,4 +33,9 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     href: "/category",
     icon: Tags,
   },
+  {
+    label: "Productos",
+    href: "/product",
+    icon: ShoppingCart,
+  }
 ];

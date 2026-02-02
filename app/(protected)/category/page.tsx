@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { getCategories, createCategory } from "@/services/category.service";
 import { CategoryRead } from "@/types/category";
-import { formatDate } from "@/utils/formatDate";
-import { FormModal } from "@/components/ui/modales";
 import { HeroTable } from "@/components/ui/tables";
+import { CustomModal } from "@/components/ui/modales/CustomModal"; 
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState<CategoryRead[]>([]);
@@ -47,7 +46,7 @@ export default function CategoryPage() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-(--color-button-bg) text-white px-6 py-2 rounded hover:bg-(--color-button-hover-bg)"
+          className="bg-[var(--color-button-bg)] text-white px-6 py-2 rounded hover:bg-[var(--color-button-hover-bg)] transition"
         >
           Crear Categoría
         </button>
@@ -62,6 +61,7 @@ export default function CategoryPage() {
         columns={[
           { key: "id", label: "ID" },
           { key: "name", label: "Nombre" },
+          { key: "code", label: "Código" },
           {
             key: "createdAt",
             label: "Creada",
@@ -80,16 +80,14 @@ export default function CategoryPage() {
         )}
       />
 
-      {/* Modal de creación */}
-      <FormModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
+      <CustomModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
         title="Nueva Categoría"
         onSubmit={handleCreateCategory}
-        submitText="Crear"
       >
         {error && (
-          <div className="p-2 bg-red-200 text-red-800 rounded">{error}</div>
+          <div className="mb-2 p-2 bg-red-200 text-red-800 rounded">{error}</div>
         )}
 
         <input
@@ -97,9 +95,9 @@ export default function CategoryPage() {
           placeholder="Nombre de la categoría"
           value={newCategoryName}
           onChange={(e) => setNewCategoryName(e.target.value)}
-          className="w-full border rounded p-2 focus:outline-(--color-sidebar)"
+          className="w-full border border-gray-300 rounded p-2 focus:outline-var(--color-sidebar) transition "
         />
-      </FormModal>
+      </CustomModal>
     </div>
   );
 }
