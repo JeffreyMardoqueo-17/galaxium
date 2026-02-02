@@ -42,3 +42,25 @@ export interface ProductResponse {
   createdByUserId: number;
   createdByUserName: string;
 }
+
+// ===============================
+// FILTER (REQUEST)
+// ===============================
+export interface ProductFilterRequest {
+  categoryId?: number;
+  name?: string;
+
+  minPrice?: number;
+  maxPrice?: number;
+
+  minStock?: number;
+  maxStock?: number;
+
+  isActive?: boolean;
+
+  orderBy?: string;
+  orderDescending?: boolean;
+
+  page?: number;
+  pageSize?: number;
+}

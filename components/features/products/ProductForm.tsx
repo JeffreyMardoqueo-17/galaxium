@@ -10,12 +10,19 @@ import { ProductCreateRequest } from "@/types/product";
 import { CategoryRead } from "@/types/category";
 
 interface CreateProductModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   categories: CategoryRead[];
-  onProductCreate: (product: ProductCreateRequest) => void;
+  onProductCreate: (product: ProductCreateRequest) => Promise<void> | void;
 }
 
-export function CreateProductModal({ categories, onProductCreate }: CreateProductModalProps) {
-  const [open, setOpen] = React.useState(false);
+export function CreateProductModal({
+  open,
+  onOpenChange,
+  categories,
+  onProductCreate,
+}: CreateProductModalProps) {
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [formData, setFormData] = React.useState<ProductCreateRequest>({
@@ -64,7 +71,7 @@ export function CreateProductModal({ categories, onProductCreate }: CreateProduc
         isActive: true,
       });
       setErrors({});
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error creando producto:", error);
     } finally {
@@ -79,7 +86,8 @@ export function CreateProductModal({ categories, onProductCreate }: CreateProduc
   }
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+
       <DialogPrimitive.Trigger asChild>
         <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           <Plus className="mr-2 w-4 h-4" /> Nuevo Producto
@@ -254,7 +262,7 @@ export function CreateProductModal({ categories, onProductCreate }: CreateProduc
             <div className="flex justify-end space-x-2">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
                 className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
               >

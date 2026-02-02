@@ -2,6 +2,7 @@ import {
   ProductCreateRequest,
   ProductUpdateRequest,
   ProductResponse,
+  ProductFilterRequest,
 } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
@@ -84,6 +85,34 @@ export async function updateProduct(
 
   if (!res.ok) {
     throw new Error("Error al actualizar el producto");
+  }
+
+  return res.json();
+}
+
+// ===============================
+// GET PRODUCTS BY FILTER
+// ===============================
+export async function getProductsByFilter(
+  filter: ProductFilterRequest
+): Promise<ProductResponse[]> {
+  const queryParams = new URLSearchParams();
+
+  Object.entries(filter).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      queryParams.append(key, String(value));
+    }
+  });
+
+  const url = `${API_URL}/Product/filter?${queryParams.toString()}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error("Error al obtener productos filtrados");
   }
 
   return res.json();

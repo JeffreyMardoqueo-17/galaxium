@@ -3,32 +3,64 @@
 import { useEffect, useState } from "react";
 import { HeroTable } from "@/components/ui/tables";
 import { CreateProductModal } from "@/components/features/products/ProductForm";
-import { ProductResponse, ProductCreateRequest } from "@/types/product";
-import { getProducts, createProduct } from "@/services/product.service";
+import {
+  ProductResponse,
+  ProductCreateRequest,
+  ProductFilterRequest,
+} from "@/types/product";
+import {
+  getProductsByFilter,
+  createProduct,
+  getProducts,
+} from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
-import type { CategoryRead } from "@/types/category"; // ajusta la ruta si es necesario
+import type { CategoryRead } from "@/types/category";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [categories, setCategories] = useState<CategoryRead[]>([]);
+
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Carga productos
-  async function loadProducts() {
-    setLoadingProducts(true);
-    try {
-      const data = await getProducts();
-      setProducts(data);
-    } catch (error) {
-      console.error("Error cargando productos", error);
-    } finally {
-      setLoadingProducts(false);
-    }
-  }
+  const [filters, setFilters] = useState<ProductFilterRequest>({
+    page: 1,
+    pageSize: 20,
+  });
 
-  // Carga categorías
+  // ===============================
+  // LOAD PRODUCTS (con filtros)
+  // ===============================
+  async function loadProducts(filter: ProductFilterRequest) {
+  setLoadingProducts(true);
+  try {
+    const data = hasRealFilters(filter)
+      ? await getProductsByFilter(filter)
+      : await getProducts(); //listado normal
+
+    setProducts(data);
+  } catch (error) {
+    console.error("Error cargando productos", error);
+  } finally {
+    setLoadingProducts(false);
+  }
+}
+
+
+  function hasRealFilters(filters: ProductFilterRequest) {
+  const { page, pageSize, ...rest } = filters;
+
+  return Object.values(rest).some(
+    (v) => v !== undefined && v !== null && v !== ""
+  );
+}
+
+
+  // ===============================
+  // LOAD CATEGORIES (una vez)
+  // ===============================
   async function loadCategories() {
     setLoadingCategories(true);
     try {
@@ -41,38 +73,117 @@ export default function ProductsPage() {
     }
   }
 
+  // ⬅️ Cargar categorías SOLO una vez
   useEffect(() => {
-    loadProducts();
     loadCategories();
   }, []);
 
-  // Crear producto nuevo
+  // ⬅️ Cargar productos cada vez que cambian filtros
+  useEffect(() => {
+    loadProducts(filters);
+  }, [filters]);
+
+  // ===============================
+  // CREATE PRODUCT
+  // ===============================
   async function handleProductCreate(product: ProductCreateRequest) {
     try {
       await createProduct(product);
       setModalOpen(false);
-      await loadProducts();
+      await loadProducts(filters);
     } catch (error) {
       console.error("Error creando producto:", error);
-      // Aquí podrías agregar UI de feedback
     }
   }
 
-  if (loadingProducts || loadingCategories) return <p>Cargando...</p>;
+  if (loadingProducts || loadingCategories) {
+    return <p className="p-4">Cargando...</p>;
+  }
 
   return (
-    <div className="space-y-6 p-6 max-w-6xl mx-auto">
+    <div className="space-y-6 p-2 max-w-6xl mx-auto">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
+        <h1 className="text-2xl font-bold">Productos</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-5 py-2 bg-blue-600 hover:bg-blue-700 transition text-white rounded-md shadow"
+          className="px-5 py-2 bg-blue-600 text-white rounded-md"
         >
           Nuevo producto
         </button>
       </div>
 
-      <HeroTable
+      {/* ===============================
+          FILTROS
+         =============================== */}
+      <div className="flex flex-wrap gap-4 bg-gray-50 p-4 rounded-md">
+        <input
+          placeholder="Nombre"
+          className="border px-2 py-1 rounded"
+          onChange={(e) =>
+            setFilters((f) => ({ ...f, name: e.target.value || undefined }))
+          }
+        />
+
+        <select
+          className="border px-2 py-1 rounded"
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              categoryId: e.target.value
+                ? Number(e.target.value)
+                : undefined,
+            }))
+          }
+        >
+          <option value="">Todas</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder="Stock mínimo"
+          className="border px-2 py-1 rounded"
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              minStock: e.target.value ? Number(e.target.value) : undefined,
+            }))
+          }
+        />
+
+        <select
+          className="border px-2 py-1 rounded"
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              isActive:
+                e.target.value === ""
+                  ? undefined
+                  : e.target.value === "true",
+            }))
+          }
+        >
+          <option value="">Todos</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </select>
+
+        <button
+          className="px-4 py-2 bg-gray-300 rounded"
+          onClick={() => setFilters({ page: 1, pageSize: 20 })}
+        >
+          Limpiar
+        </button>
+      </div>
+
+      {/* ===============================
+          TABLE
+         =============================== */}
+     <HeroTable
         data={products}
         columns={[
           { key: "name", label: "Nombre" },
@@ -84,7 +195,7 @@ export default function ProductsPage() {
             render: (item) => `$${item.costPrice.toFixed(2)}`,
           },
           { key: "stock", label: "Stock", align: "end" },
-          { key: "minimumStock", label: "Stock mínimo", align: "end" },
+         
           {
             key: "isActive",
             label: "Activo",
@@ -120,10 +231,13 @@ export default function ProductsPage() {
 
       {/* Modal para crear producto */}
       {modalOpen && (
-        <CreateProductModal
-          categories={categories}
-          onProductCreate={handleProductCreate}
-        />
+       
+           <CreateProductModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        categories={categories}
+        onProductCreate={handleProductCreate}
+      />
       )}
     </div>
   );
