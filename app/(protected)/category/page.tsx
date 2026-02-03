@@ -4,13 +4,19 @@ import { useEffect, useState } from "react";
 import { getCategories, createCategory } from "@/services/category.service";
 import { CategoryRead } from "@/types/category";
 import { HeroTable } from "@/components/ui/tables";
-import { CustomModal } from "@/components/ui/modales/CustomModal"; 
+import { CustomModal } from "@/components/ui/modales/CustomModal";
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState<CategoryRead[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10; // o el tamaño que quieras por página
+  const totalItems = categories.length;
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   useEffect(() => {
     getCategories()
@@ -73,11 +79,22 @@ export default function CategoryPage() {
           },
         ]}
         actions={(item) => (
-          <div className="flex gap-2">
-            <button className="text-blue-600">Editar</button>
-            <button className="text-red-600">Eliminar</button>
+          <div className="flex gap-2 justify-center">
+            <button className="cursor-pointer bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600 transition">
+              Ver
+            </button>
+            <button className="cursor-pointer bg-yellow-500 px-3 py-1 text-white rounded-md hover:bg-yellow-600 transition">
+              Editar
+            </button>
+            <button className="cursor-pointer bg-red-500 px-3 py-1 text-white rounded-md hover:bg-red-600 transition">
+              Eliminar
+            </button>
           </div>
         )}
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
       />
 
       <CustomModal
@@ -87,7 +104,9 @@ export default function CategoryPage() {
         onSubmit={handleCreateCategory}
       >
         {error && (
-          <div className="mb-2 p-2 bg-red-200 text-red-800 rounded">{error}</div>
+          <div className="mb-2 p-2 bg-red-200 text-red-800 rounded">
+            {error}
+          </div>
         )}
 
         <input
