@@ -34,6 +34,11 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: ShoppingCart,
   },
   {
+    label: "Entradas de Stock",
+    href: "/stock-entry",
+    icon: ShoppingCart,
+  },
+  {
     label: "Categorías",
     href: "/category",
     icon: Tags,

@@ -91,7 +91,7 @@ export default function ProductsPage() {
     loadCategories();
   }, []);
 
-  // 🔥 Debounce profesional
+  // 🔥 Debounce
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedFilters(filters);
@@ -304,37 +304,40 @@ export default function ProductsPage() {
 
       {/* TABLE */}
 
-      <HeroTable
+  <HeroTable
         data={products}
         columns={[
           { key: "name", label: "Nombre" },
 
-          // Definición del render para la columna stock
           {
             key: "stock",
             label: "Stock",
             align: "end",
-            render: (row: any) => {
+            render: (row: ProductResponse) => {
+              if (row.stock === null) {
+                return (
+                  <span className="px-2 py-1 rounded text-gray-400 italic">
+                    Sin stock
+                  </span>
+                );
+              }
+
               const stock = row.stock;
               const minStock = row.minimumStock;
               let color = "";
 
               if (stock === 0 || stock < minStock) {
-                // Rojo si 0 o menor al mínimo
                 color = "text-red-600 bg-red-100";
               } else if (stock === minStock + 1) {
-                // Naranja si es justo 1 más que el mínimo
                 color = "text-orange-600 bg-orange-100";
-              } else if (stock > minStock + 1) {
-                // Verde si es más que 1 unidad sobre el mínimo
-                color = "text-green-600 bg-green-100";
               } else {
-                // Caso cuando stock === mínimo (puedes definir si lo quieres neutro o algún color)
-                color = "text-gray-700";
+                color = "text-green-600 bg-green-100";
               }
 
               return (
-                <span className={`px-2 py-1 rounded ${color}`}>{stock}</span>
+                <span className={`px-2 py-1 rounded ${color}`}>
+                  {stock}
+                </span>
               );
             },
           },
@@ -342,17 +345,27 @@ export default function ProductsPage() {
           { key: "minimumStock", label: "Stock mínimo", align: "end" },
 
           {
+            key: "salePrice",
+            label: "Precio de venta",
+            align: "end",
+            render: (item: ProductResponse) =>
+              item.salePrice !== null ? (
+                `$${item.salePrice.toFixed(2)}`
+              ) : (
+                <span className="text-gray-400 italic">No definido</span>
+              ),
+          },
+
+          {
             key: "isActive",
             label: "Activo",
-            render: (item) => (
+            render: (item: ProductResponse) => (
               <span
-                className={`px-2 py-1 rounded-full text-xs font-semibold
-        ${
-          item.isActive
-            ? "bg-green-100 text-green-700"
-            : "bg-red-100 text-red-700"
-        }
-      `}
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  item.isActive
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
               >
                 {item.isActive ? "Activo" : "Inactivo"}
               </span>
@@ -360,29 +373,22 @@ export default function ProductsPage() {
           },
 
           { key: "categoryName", label: "Categoría" },
-
-          {
-            key: "salePrice",
-            label: "Precio de venta",
-            align: "end",
-            render: (item) => `$${item.salePrice.toFixed(2)}`,
-          },
         ]}
         actions={(item) => (
           <div className="flex gap-2 justify-center">
-            <button className="cursor-pointer bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600 transition">
+            <button className="bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600">
               Ver
             </button>
-            <button className="cursor-pointer bg-yellow-500 px-3 py-1 text-white rounded-md hover:bg-yellow-600 transition">
+            <button className="bg-yellow-500 px-3 py-1 text-white rounded-md hover:bg-yellow-600">
               Editar
             </button>
-            <button className="cursor-pointer bg-red-500 px-3 py-1 text-white rounded-md hover:bg-red-600 transition">
+            <button className="bg-red-500 px-3 py-1 text-white rounded-md hover:bg-red-600">
               Eliminar
             </button>
           </div>
         )}
         page={filters.page ?? 1}
-        pageSize={filters.pageSize ?? 5}
+        pageSize={filters.pageSize ?? 7}
         totalItems={products.length}
         onPageChange={(page) =>
           setFilters((f) => ({

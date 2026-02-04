@@ -2,15 +2,14 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Plus } from "lucide-react";
-import {CustomerCreateRequestDTO} from "@/types/custoner"
-
-
+import { CustomerCreateRequestDTO } from "@/types/custoner";
 
 interface CreateCustomerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCustomerCreate: (customer: CustomerCreateRequestDTO) => Promise<void> | void;
+  onCustomerCreate: (
+    customer: CustomerCreateRequestDTO
+  ) => Promise<void>;
 }
 
 export function CreateCustomerModal({
@@ -20,71 +19,134 @@ export function CreateCustomerModal({
 }: CreateCustomerModalProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const [formData, setFormData] = React.useState<CustomerCreateRequestDTO>({
-    fullName: "",
-    phone: "",
-    email: "",
-  });
+  const [formData, setFormData] =
+    React.useState<CustomerCreateRequestDTO>({
+      fullName: "",
+      phone: "",
+      email: "",
+    });
 
-  const [errors, setErrors] = React.useState<Partial<Record<keyof CustomerCreateRequestDTO, string>>>({});
+  const [errors, setErrors] = React.useState<
+    Partial<Record<keyof CustomerCreateRequestDTO, string>>
+  >({});
 
-  function validateForm() {
-    const newErrors: Partial<Record<keyof CustomerCreateRequestDTO, string>> = {};
+  const [apiError, setApiError] = React.useState<string | null>(null);
 
-    if (!formData.fullName.trim()) newErrors.fullName = "El nombre completo es requerido";
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+  /* ===========================
+     VALIDACIÓN FRONTEND
+     =========================== */
+  function validateForm(): boolean {
+    const newErrors: Partial<
+      Record<keyof CustomerCreateRequestDTO, string>
+    > = {};
+
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "El nombre completo es requerido";
+    }
+
+    if (
+      formData.email &&
+      !/\S+@\S+\.\S+/.test(formData.email)
+    ) {
       newErrors.email = "Correo electrónico inválido";
-    if (formData.phone && !/^\+?\d{7,15}$/.test(formData.phone.replace(/\s+/g, "")))
+    }
+
+    if (
+      formData.phone &&
+      !/^\+?\d{7,15}$/.test(formData.phone.replace(/\s+/g, ""))
+    ) {
       newErrors.phone = "Número de teléfono inválido";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
 
+  /* ===========================
+     SUBMIT
+     =========================== */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    setApiError(null);
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+
     try {
       await onCustomerCreate(formData);
+
+      // Limpiar solo si TODO salió bien
       setFormData({ fullName: "", phone: "", email: "" });
       setErrors({});
       onOpenChange(false);
     } catch (error) {
       console.error("Error creando cliente:", error);
+
+      // ✅ FETCH: el mensaje REAL viene en error.message
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al crear el cliente.";
+
+      setApiError(message);
+
+      // Marcar campo específico según mensaje del backend
+      if (message.toLowerCase().includes("correo")) {
+        setErrors((prev) => ({
+          ...prev,
+          email: message,
+        }));
+      }
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  /* ===========================
+     INPUT CHANGE
+     =========================== */
   function handleInputChange(
     field: keyof CustomerCreateRequestDTO,
-    value: string | null
+    value: string
   ) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
 
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+
+    if (apiError) setApiError(null);
   }
-
+  /* ===========================
+     UI
+     =========================== */
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Trigger asChild>
-        <button className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-          <Plus className="mr-2 w-4 h-4" /> Nuevo Cliente
-        </button>
-      </DialogPrimitive.Trigger>
-
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPrimitive.Content className="relative max-w-md w-full rounded-md bg-white p-6 shadow-lg focus:outline-none">
+          <DialogPrimitive.Content className="w-full max-w-md rounded bg-white p-6 shadow-lg">
             <DialogPrimitive.Title className="text-lg font-semibold mb-2">
               Crear Nuevo Cliente
             </DialogPrimitive.Title>
+
             <DialogPrimitive.Description className="mb-4 text-sm text-gray-600">
               Completa los datos para registrar un nuevo cliente.
             </DialogPrimitive.Description>
+
+            {apiError && (
+              <div className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {apiError}
+              </div>
+            )}
+
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name */}
@@ -98,7 +160,9 @@ export function CreateCustomerModal({
                   placeholder="Ej: Jeffrey"
                   className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={formData.fullName}
-                  onChange={(e) => handleInputChange("fullName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("fullName", e.target.value)
+                  }
                 />
                 {errors.fullName && (
                   <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>

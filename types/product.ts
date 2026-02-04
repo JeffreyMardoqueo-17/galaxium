@@ -29,9 +29,9 @@ export interface ProductResponse {
   id: number;
   name: string;
   sku: string;
-  costPrice: number;
-  salePrice: number;
-  stock: number;
+  costPrice: number | null;
+  salePrice: number | null;
+  stock: number | null;
   minimumStock: number;
   isActive: boolean;
   createdAt: string; // ISO string

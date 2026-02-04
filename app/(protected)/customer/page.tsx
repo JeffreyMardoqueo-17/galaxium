@@ -31,7 +31,16 @@ async function createCustomer(
     },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Error al crear cliente");
+
+  // 👇 LEER MENSAJE DEL BACKEND
+  if (!res.ok) {
+    const errorBody = await res.json();
+
+    throw new Error(
+      errorBody?.message || "Error al crear cliente"
+    );
+  }
+
   return res.json();
 }
 
@@ -63,13 +72,8 @@ export default function CustomerPage() {
   }
 
   async function handleCreateCustomer(customer: CustomerCreateRequestDTO) {
-    try {
-      await createCustomer(customer);
-      await loadCustomers();
-      setModalOpen(false);
-    } catch (err) {
-      alert(`No se pudo crear el cliente: ${(err as Error).message}`);
-    }
+    await createCustomer(customer);
+    await loadCustomers();
   }
 
   return (
@@ -98,8 +102,7 @@ export default function CustomerPage() {
             {
               key: "createdAt",
               label: "Fecha de Registro",
-              render: (item) =>
-                new Date(item.createdAt).toLocaleDateString(),
+              render: (item) => new Date(item.createdAt).toLocaleDateString(),
             },
           ]}
           page={page}

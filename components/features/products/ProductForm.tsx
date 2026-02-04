@@ -236,25 +236,7 @@ export function CreateProductModal({
 
               {/* Stock */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="initialStock" className="block mb-1 font-medium">
-                    Stock Inicial <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    id="initialStock"
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.initialStock || ""}
-                    onChange={(e) =>
-                      handleInputChange("initialStock", parseInt(e.target.value) || 0)
-                    }
-                  />
-                  {errors.initialStock && (
-                    <p className="mt-1 text-sm text-red-600">{errors.initialStock}</p>
-                  )}
-                </div>
+              
                 <div>
                   <label htmlFor="minimumStock" className="block mb-1 font-medium">
                     Stock Mínimo <span className="text-red-600">*</span>
@@ -274,10 +256,7 @@ export function CreateProductModal({
                     <p className="mt-1 text-sm text-red-600">{errors.minimumStock}</p>
                   )}
                 </div>
-              </div>
-
-              {/* Switch */}
-              <div className="flex items-center justify-between rounded border p-4">
+                <div className="flex items-center justify-between rounded border p-4">
                 <div>
                   <label htmlFor="isActive" className="block font-medium">
                     Producto Activo
@@ -298,6 +277,10 @@ export function CreateProductModal({
                 </SwitchPrimitive.Root>
               </div>
 
+              </div>
+
+              {/* Switch */}
+              
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
