@@ -24,8 +24,18 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: Users,
   },
   {
+    label: "Clientes",
+    href: "/customer",
+    icon: Users,
+  },
+  {
     label: "Ventas",
     href: "/ventas",
+    icon: ShoppingCart,
+  },
+  {
+    label: "Entradas de Stock",
+    href: "/stock-entry",
     icon: ShoppingCart,
   },
   {
