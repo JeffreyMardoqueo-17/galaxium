@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as Popover from "@radix-ui/react-popover";
 import { HeroTable } from "@/components/ui/tables";
 import { CreateProductModal } from "@/components/features/products/ProductForm";
+import { PriceFormModal } from "@/components/features/products/PriceForm";
+import { ProductDetailModal } from "@/components/features/products/ProductVerMas";
 import {
   ProductResponse,
   ProductCreateRequest,
@@ -12,12 +15,14 @@ import {
   getProductsByFilter,
   createProduct,
   getProducts,
+  updateProduct,
 } from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
 import type { CategoryRead } from "@/types/category";
 //iconos
 import { IoIosCreate, IoIosColorFilter } from "react-icons/io";
 import { MdCleaningServices } from "react-icons/md";
+import { AlertCircle, DollarSign } from "lucide-react";
 
 export default function ProductsPage() {
   // ===============================
@@ -30,6 +35,9 @@ export default function ProductsPage() {
   const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [priceModalOpen, setPriceModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const [filters, setFilters] = useState<ProductFilterRequest>({
@@ -115,6 +123,43 @@ export default function ProductsPage() {
     } catch (error) {
       console.error("Error creando producto:", error);
     }
+  }
+
+  // ===============================
+  // UPDATE PRICE
+  // ===============================
+  async function handlePriceUpdate(productId: number, salePrice: number) {
+    try {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      await updateProduct(productId, {
+        categoryId: product.categoryId,
+        name: product.name,
+        salePrice: salePrice,
+        minimumStock: product.minimumStock,
+        isActive: product.isActive,
+      });
+
+      setPriceModalOpen(false);
+      await loadProducts(debouncedFilters);
+    } catch (error) {
+      console.error("Error actualizando precio:", error);
+      throw error;
+    }
+  }
+
+  // ===============================
+  // OPEN MODALS
+  // ===============================
+  function handleOpenPriceModal(product: ProductResponse) {
+    setSelectedProduct(product);
+    setPriceModalOpen(true);
+  }
+
+  function handleOpenDetailModal(product: ProductResponse) {
+    setSelectedProduct(product);
+    setDetailModalOpen(true);
   }
 
   // ===============================
@@ -348,12 +393,57 @@ export default function ProductsPage() {
             key: "salePrice",
             label: "Precio de venta",
             align: "end",
-            render: (item: ProductResponse) =>
-              item.salePrice !== null ? (
-                `$${item.salePrice.toFixed(2)}`
-              ) : (
-                <span className="text-gray-400 italic">No definido</span>
-              ),
+            render: (item: ProductResponse) => {
+              const hasNoPrice = !item.salePrice || item.salePrice === 0;
+              
+              if (!hasNoPrice) {
+                return `$${(item.salePrice ?? 0).toFixed(2)}`;
+              }
+
+              return (
+                <Popover.Root>
+                  <Popover.Trigger asChild>
+                    <button className="flex items-center gap-1 text-red-600 hover:text-red-700 font-medium group">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="text-sm">Sin precio</span>
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content
+                      className="z-50 w-72 rounded-lg border border-red-300 bg-red-50 p-4 shadow-lg"
+                      sideOffset={5}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-red-900 mb-1">
+                              Producto sin precio de venta
+                            </p>
+                            <p className="text-xs text-red-700">
+                              Este producto no puede estar activo hasta que se asigne un precio de venta.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-red-200">
+                          <p className="text-xs text-red-800 mb-2 font-medium">
+                            ¿Deseas asignar el precio ahora?
+                          </p>
+                          <button
+                            onClick={() => handleOpenPriceModal(item)}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition text-sm font-medium"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                            Asignar Precio
+                          </button>
+                        </div>
+                      </div>
+                      <Popover.Arrow className="fill-red-300" />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              );
+            },
           },
 
           {
@@ -376,9 +466,21 @@ export default function ProductsPage() {
         ]}
         actions={(item) => (
           <div className="flex gap-2 justify-center">
-            <button className="bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600">
+            <button 
+              onClick={() => handleOpenDetailModal(item)}
+              className="bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600"
+            >
               Ver
             </button>
+            {(!item.salePrice || item.salePrice === 0) && (
+              <button 
+                onClick={() => handleOpenPriceModal(item)}
+                className="bg-green-500 px-3 py-1 text-white rounded-md hover:bg-green-600 flex items-center gap-1"
+              >
+                <DollarSign className="w-4 h-4" />
+                Precio
+              </button>
+            )}
             <button className="bg-yellow-500 px-3 py-1 text-white rounded-md hover:bg-yellow-600">
               Editar
             </button>
@@ -404,6 +506,23 @@ export default function ProductsPage() {
           onOpenChange={setModalOpen}
           categories={categories}
           onProductCreate={handleProductCreate}
+        />
+      )}
+
+      {priceModalOpen && (
+        <PriceFormModal
+          open={priceModalOpen}
+          onOpenChange={setPriceModalOpen}
+          product={selectedProduct}
+          onPriceUpdate={handlePriceUpdate}
+        />
+      )}
+
+      {detailModalOpen && (
+        <ProductDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          product={selectedProduct}
         />
       )}
     </div>

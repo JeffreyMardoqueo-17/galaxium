@@ -4,8 +4,8 @@
 export interface ProductCreateRequest {
   categoryId: number;
   name: string;
-  costPrice: number;
-  salePrice: number;
+  costPrice: number | null;
+  salePrice: number | null;
   initialStock: number;
   minimumStock: number;
   isActive: boolean;

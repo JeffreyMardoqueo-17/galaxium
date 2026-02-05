@@ -44,10 +44,7 @@ export function CreateProductModal({
     if (!formData.categoryId || formData.categoryId === 0)
       newErrors.categoryId = "La categoría es requerida";
     if (!formData.name.trim()) newErrors.name = "El nombre es requerido";
-    if (formData.costPrice <= 0)
-      newErrors.costPrice = "El precio de costo debe ser mayor a 0";
-    if (formData.salePrice <= 0)
-      newErrors.salePrice = "El precio de venta debe ser mayor a 0";
+
     if (formData.initialStock < 0)
       newErrors.initialStock = "El stock inicial no puede ser negativo";
     if (formData.minimumStock < 0)
