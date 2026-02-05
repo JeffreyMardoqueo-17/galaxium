@@ -3,6 +3,7 @@ import {
   ProductUpdateRequest,
   ProductResponse,
   ProductFilterRequest,
+  ProductUpdatePriceRequest,
 } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
@@ -113,6 +114,27 @@ export async function getProductsByFilter(
 
   if (!res.ok) {
     throw new Error("Error al obtener productos filtrados");
+  }
+
+  return res.json();
+}
+
+
+// ===============================
+// UPDATE PRODUCT PRICE
+// ===============================
+export async function updateProductPrice(
+  data: ProductUpdatePriceRequest
+): Promise<ProductResponse> {
+  const res = await fetch(`${API_URL}/Product/price`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "Error al actualizar el precio del producto");
   }
 
   return res.json();

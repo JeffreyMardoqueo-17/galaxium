@@ -16,6 +16,7 @@ import {
   createProduct,
   getProducts,
   updateProduct,
+  updateProductPrice,
 } from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
 import type { CategoryRead } from "@/types/category";
@@ -115,39 +116,39 @@ export default function ProductsPage() {
   // ===============================
   // CREATE PRODUCT
   // ===============================
-  async function handleProductCreate(product: ProductCreateRequest) {
-    try {
-      await createProduct(product);
-      setModalOpen(false);
-      await loadProducts(debouncedFilters);
-    } catch (error) {
-      console.error("Error creando producto:", error);
-    }
+
+async function handleProductCreate(product: ProductCreateRequest) {
+  try {
+    const result = await createProduct(product);
+    await loadProducts(debouncedFilters);
+    return typeof result === "number" ? result : result?.id;
+  } catch (error) {
+    console.error("Error creando producto:", error);
+    throw error;
   }
+}
+
 
   // ===============================
   // UPDATE PRICE
   // ===============================
-  async function handlePriceUpdate(productId: number, salePrice: number) {
-    try {
-      const product = products.find(p => p.id === productId);
-      if (!product) return;
+async function handlePriceUpdate(productId: number, salePrice: number) {
+  try {
+    // Llamamos al servicio del backend
+    const updatedProduct = await updateProductPrice({ productId, newPrice: salePrice });
+    console.log("Precio actualizado:", updatedProduct);
 
-      await updateProduct(productId, {
-        categoryId: product.categoryId,
-        name: product.name,
-        salePrice: salePrice,
-        minimumStock: product.minimumStock,
-        isActive: product.isActive,
-      });
-
-      setPriceModalOpen(false);
-      await loadProducts(debouncedFilters);
-    } catch (error) {
-      console.error("Error actualizando precio:", error);
-      throw error;
+    if (updatedProduct) {
+      // Actualizamos el estado de productos en la UI
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, salePrice: updatedProduct.salePrice } : p))
+      );
     }
+  } catch (err) {
+    console.error("Error actualizando precio:", err);
+    throw err; // para que el modal muestre el error
   }
+}
 
   // ===============================
   // OPEN MODALS

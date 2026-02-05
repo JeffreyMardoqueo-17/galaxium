@@ -22,6 +22,7 @@ export function PriceFormModal({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [salePrice, setSalePrice] = React.useState<number>(0);
   const [error, setError] = React.useState<string>("");
+  const [showStockPrompt, setShowStockPrompt] = React.useState(false); //estado para ir a stock
 
   React.useEffect(() => {
     if (product) {
@@ -38,12 +39,12 @@ export function PriceFormModal({
       setError("El precio de venta debe ser mayor a cero");
       return false;
     }
-    
+
     if (product.costPrice && salePrice < (product.costPrice ?? 0)) {
       setError("Advertencia: El precio de venta es menor al costo");
       // Pero permitimos continuar
     }
-    
+
     return true;
   }
 
@@ -58,16 +59,31 @@ export function PriceFormModal({
       await onPriceUpdate(product.id, salePrice);
       setError("");
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error actualizando precio:", error);
-      setError("Error al actualizar el precio");
-    } finally {
-      setIsSubmitting(false);
+    } catch (err: any) {
+      console.error("Error actualizando precio:", err);
+
+      let message = "Error al actualizar el precio";
+
+      try {
+        const parsed = JSON.parse(err.message);
+        if (parsed?.message) message = parsed.message;
+      } catch {
+        message = err.message || message;
+      }
+
+      // Si el error es de stock, mostramos opción de registrar stock
+      if (message.toLowerCase().includes("stock")) {
+        setError(message); // mostramos el mensaje del backend
+        setShowStockPrompt(true); // activamos la opción de registrar stock
+      } else {
+        setError(message);
+        setShowStockPrompt(false);
+      }
     }
   }
 
   const potentialProfit = salePrice - (product.costPrice ?? 0);
-  const profitMargin = product.costPrice 
+  const profitMargin = product.costPrice
     ? ((potentialProfit / (product.costPrice ?? 1)) * 100).toFixed(2)
     : "0";
 
@@ -76,9 +92,7 @@ export function PriceFormModal({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 z-50" />
         <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-          <DialogPrimitive.Content
-            className="relative max-w-md w-full rounded-md bg-white p-6 shadow-lg focus:outline-none"
-          >
+          <DialogPrimitive.Content className="relative max-w-md w-full rounded-md bg-white p-6 shadow-lg focus:outline-none">
             <DialogPrimitive.Title className="text-lg font-semibold mb-2 flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-green-600" />
               Asignar Precio de Venta
@@ -89,7 +103,9 @@ export function PriceFormModal({
 
             {/* Información del producto */}
             <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="text-sm font-semibold text-blue-900">{product.name}</p>
+              <p className="text-sm font-semibold text-blue-900">
+                {product.name}
+              </p>
               <p className="text-xs text-blue-700 mt-1">
                 Costo: ${product.costPrice?.toFixed(2) || "N/A"}
               </p>
@@ -123,25 +139,47 @@ export function PriceFormModal({
                   />
                 </div>
                 {error && (
-                  <p className={`mt-1 text-sm ${error.includes("Advertencia") ? "text-yellow-600" : "text-red-600"}`}>
-                    {error}
-                  </p>
+                  <div className="mt-2">
+                    <p className="text-sm text-red-600">{error}</p>
+
+                    {showStockPrompt && (
+                      <button
+                        type="button"
+                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                        onClick={() => {
+                          // Aquí disparas la acción de registrar stock
+                          // Puede ser abrir un modal de stock-entry o redirigir
+                          onOpenChange(false); // cerramos el modal de precio
+                          window.location.href = `/stock-entry?productId=${product?.id}`;
+                          // o si tienes un modal: setStockModalOpen(true) desde parent
+                        }}
+                      >
+                        Registrar Stock
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
               {/* Análisis de Ganancia */}
               {salePrice > 0 && product.costPrice && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
-                  <p className="text-xs font-semibold text-gray-700">Análisis de Ganancia</p>
+                  <p className="text-xs font-semibold text-gray-700">
+                    Análisis de Ganancia
+                  </p>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Ganancia por unidad:</span>
-                    <span className={`font-semibold ${potentialProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <span
+                      className={`font-semibold ${potentialProfit >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       ${potentialProfit.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Margen de ganancia:</span>
-                    <span className={`font-semibold ${parseFloat(profitMargin) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <span
+                      className={`font-semibold ${parseFloat(profitMargin) >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {profitMargin}%
                     </span>
                   </div>

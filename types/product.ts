@@ -64,3 +64,9 @@ export interface ProductFilterRequest {
   page?: number;
   pageSize?: number;
 }
+
+
+export interface ProductUpdatePriceRequest {
+  productId: number;
+  newPrice: number;
+}
