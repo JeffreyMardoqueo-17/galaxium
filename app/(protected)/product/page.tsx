@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as HoverCard from "@radix-ui/react-hover-card";
+import { AlertCircle, DollarSign } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 import { HeroTable } from "@/components/ui/tables";
 import { CreateProductModal } from "@/components/features/products/ProductForm";
@@ -23,8 +25,6 @@ import type { CategoryRead } from "@/types/category";
 //iconos
 import { IoIosCreate, IoIosColorFilter } from "react-icons/io";
 import { MdCleaningServices } from "react-icons/md";
-import { AlertCircle, DollarSign } from "lucide-react";
-
 export default function ProductsPage() {
   // ===============================
   // STATE
@@ -38,7 +38,8 @@ export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [priceModalOpen, setPriceModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null);
+  const [selectedProduct, setSelectedProduct] =
+    useState<ProductResponse | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const [filters, setFilters] = useState<ProductFilterRequest>({
@@ -117,38 +118,42 @@ export default function ProductsPage() {
   // CREATE PRODUCT
   // ===============================
 
-async function handleProductCreate(product: ProductCreateRequest) {
-  try {
-    const result = await createProduct(product);
-    await loadProducts(debouncedFilters);
-    return typeof result === "number" ? result : result?.id;
-  } catch (error) {
-    console.error("Error creando producto:", error);
-    throw error;
+  async function handleProductCreate(product: ProductCreateRequest) {
+    try {
+      const result = await createProduct(product);
+      await loadProducts(debouncedFilters);
+      return typeof result === "number" ? result : result?.id;
+    } catch (error) {
+      console.error("Error creando producto:", error);
+      throw error;
+    }
   }
-}
-
 
   // ===============================
   // UPDATE PRICE
   // ===============================
-async function handlePriceUpdate(productId: number, salePrice: number) {
-  try {
-    // Llamamos al servicio del backend
-    const updatedProduct = await updateProductPrice({ productId, newPrice: salePrice });
-    console.log("Precio actualizado:", updatedProduct);
+  async function handlePriceUpdate(productId: number, salePrice: number) {
+    try {
+      // Llamamos al servicio del backend
+      const updatedProduct = await updateProductPrice({
+        productId,
+        newPrice: salePrice,
+      });
+      console.log("Precio actualizado:", updatedProduct);
 
-    if (updatedProduct) {
-      // Actualizamos el estado de productos en la UI
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, salePrice: updatedProduct.salePrice } : p))
-      );
+      if (updatedProduct) {
+        // Actualizamos el estado de productos en la UI
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, ...updatedProduct } : p,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Error actualizando precio:", err);
+      throw err; // para que el modal muestre el error
     }
-  } catch (err) {
-    console.error("Error actualizando precio:", err);
-    throw err; // para que el modal muestre el error
   }
-}
 
   // ===============================
   // OPEN MODALS
@@ -180,168 +185,172 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
         </button>
       </div>
 
-<div className="flex flex-wrap gap-4 p-4 rounded-md bg-white shadow-sm">
-  {/* Nombre */}
-  <input
-    placeholder="Nombre"
-    className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-    value={filters.name ?? ""}
-    onChange={(e) =>
-      setFilters((f) => ({
-        ...f,
-        name: e.target.value || undefined,
-        page: 1,
-      }))
-    }
-  />
+      <div className="flex flex-wrap gap-4 p-4 rounded-md bg-white shadow-sm">
+        {/* Nombre */}
+        <input
+          placeholder="Nombre"
+          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+          value={filters.name ?? ""}
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              name: e.target.value || undefined,
+              page: 1,
+            }))
+          }
+        />
 
-  {/* Categorías */}
-  <select
-    className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-    value={filters.categoryId ?? ""}
-    onChange={(e) =>
-      setFilters((f) => ({
-        ...f,
-        categoryId: e.target.value ? Number(e.target.value) : undefined,
-        page: 1,
-      }))
-    }
-  >
-    <option value="">Todas</option>
-    {categories.map((c) => (
-      <option key={c.id} value={c.id}>
-        {c.name}
-      </option>
-    ))}
-  </select>
+        {/* Categorías */}
+        <select
+          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+          value={filters.categoryId ?? ""}
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              categoryId: e.target.value ? Number(e.target.value) : undefined,
+              page: 1,
+            }))
+          }
+        >
+          <option value="">Todas</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
-  {/* Stock mínimo */}
-  <input
-    type="number"
-    placeholder="Stock mínimo"
-    className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-    value={filters.minStock ?? ""}
-    onChange={(e) =>
-      setFilters((f) => ({
-        ...f,
-        minStock: e.target.value ? Number(e.target.value) : undefined,
-        page: 1,
-      }))
-    }
-  />
+        {/* Stock mínimo */}
+        <input
+          type="number"
+          placeholder="Stock mínimo"
+          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+          value={filters.minStock ?? ""}
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              minStock: e.target.value ? Number(e.target.value) : undefined,
+              page: 1,
+            }))
+          }
+        />
 
-  {/* Activo / Inactivo */}
-  <select
-    className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-    value={filters.isActive === undefined ? "" : filters.isActive.toString()}
-    onChange={(e) =>
-      setFilters((f) => ({
-        ...f,
-        isActive:
-          e.target.value === "" ? undefined : e.target.value === "true",
-        page: 1,
-      }))
-    }
-  >
-    <option value="">Todos</option>
-    <option value="true">Activos</option>
-    <option value="false">Inactivos</option>
-  </select>
+        {/* Activo / Inactivo */}
+        <select
+          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+          value={
+            filters.isActive === undefined ? "" : filters.isActive.toString()
+          }
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              isActive:
+                e.target.value === "" ? undefined : e.target.value === "true",
+              page: 1,
+            }))
+          }
+        >
+          <option value="">Todos</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </select>
 
-  {/* Botón filtros avanzados */}
-  <button
-    onClick={() => setShowAdvancedFilters((s) => !s)}
-    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
-  >
-    <IoIosColorFilter size={20} />
-    {showAdvancedFilters ? "Ocultar filtros avanzados" : "Filtros avanzados"}
-  </button>
+        {/* Botón filtros avanzados */}
+        <button
+          onClick={() => setShowAdvancedFilters((s) => !s)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
+        >
+          <IoIosColorFilter size={20} />
+          {showAdvancedFilters
+            ? "Ocultar filtros avanzados"
+            : "Filtros avanzados"}
+        </button>
 
-  {/* Filtros avanzados */}
-  {showAdvancedFilters && (
-    <>
-      <input
-        type="number"
-        placeholder="Precio mínimo"
-        className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-        value={filters.minPrice ?? ""}
-        onChange={(e) =>
-          setFilters((f) => ({
-            ...f,
-            minPrice: e.target.value ? Number(e.target.value) : undefined,
-            page: 1,
-          }))
-        }
-      />
+        {/* Filtros avanzados */}
+        {showAdvancedFilters && (
+          <>
+            <input
+              type="number"
+              placeholder="Precio mínimo"
+              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+              value={filters.minPrice ?? ""}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  minPrice: e.target.value ? Number(e.target.value) : undefined,
+                  page: 1,
+                }))
+              }
+            />
 
-      <input
-        type="number"
-        placeholder="Precio máximo"
-        className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-        value={filters.maxPrice ?? ""}
-        onChange={(e) =>
-          setFilters((f) => ({
-            ...f,
-            maxPrice: e.target.value ? Number(e.target.value) : undefined,
-            page: 1,
-          }))
-        }
-      />
+            <input
+              type="number"
+              placeholder="Precio máximo"
+              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+              value={filters.maxPrice ?? ""}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  maxPrice: e.target.value ? Number(e.target.value) : undefined,
+                  page: 1,
+                }))
+              }
+            />
 
-      <select
-        className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-        value={filters.orderBy ?? ""}
-        onChange={(e) =>
-          setFilters((f) => ({
-            ...f,
-            orderBy: e.target.value || undefined,
-          }))
-        }
-      >
-        <option value="">Ordenar por</option>
-        <option value="Name">Nombre</option>
-        <option value="SalePrice">Precio</option>
-        <option value="Stock">Stock</option>
-      </select>
+            <select
+              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+              value={filters.orderBy ?? ""}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  orderBy: e.target.value || undefined,
+                }))
+              }
+            >
+              <option value="">Ordenar por</option>
+              <option value="Name">Nombre</option>
+              <option value="SalePrice">Precio</option>
+              <option value="Stock">Stock</option>
+            </select>
 
-      <select
-        className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-        value={
-          filters.orderDescending === undefined
-            ? ""
-            : filters.orderDescending.toString()
-        }
-        onChange={(e) =>
-          setFilters((f) => ({
-            ...f,
-            orderDescending:
-              e.target.value === ""
-                ? undefined
-                : e.target.value === "true",
-          }))
-        }
-      >
-        <option value="">Orden</option>
-        <option value="false">Ascendente</option>
-        <option value="true">Descendente</option>
-      </select>
-    </>
-  )}
+            <select
+              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
+              value={
+                filters.orderDescending === undefined
+                  ? ""
+                  : filters.orderDescending.toString()
+              }
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  orderDescending:
+                    e.target.value === ""
+                      ? undefined
+                      : e.target.value === "true",
+                }))
+              }
+            >
+              <option value="">Orden</option>
+              <option value="false">Ascendente</option>
+              <option value="true">Descendente</option>
+            </select>
+          </>
+        )}
 
-  {/* Botón limpiar */}
-  <button
-    className="flex items-center gap-2 px-4 py-2 bg-gray-300 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
-    onClick={() =>
-      setFilters({
-        page: 1,
-        pageSize: 7,
-      })
-    }
-  >
-    <MdCleaningServices size={20} />
-    Limpiar
-  </button>
-</div>
+        {/* Botón limpiar */}
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-gray-300 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
+          onClick={() =>
+            setFilters({
+              page: 1,
+              pageSize: 7,
+            })
+          }
+        >
+          <MdCleaningServices size={20} />
+          Limpiar
+        </button>
+      </div>
 
       {/* LOADING VISUAL */}
       {loadingProducts && (
@@ -350,7 +359,7 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
 
       {/* TABLE */}
 
-  <HeroTable
+      <HeroTable
         data={products}
         columns={[
           { key: "name", label: "Nombre" },
@@ -381,9 +390,7 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
               }
 
               return (
-                <span className={`px-2 py-1 rounded ${color}`}>
-                  {stock}
-                </span>
+                <span className={`px-2 py-1 rounded ${color}`}>{stock}</span>
               );
             },
           },
@@ -396,19 +403,38 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
             align: "end",
             render: (item: ProductResponse) => {
               const hasNoPrice = !item.salePrice || item.salePrice === 0;
-              
+
               if (!hasNoPrice) {
                 return `$${(item.salePrice ?? 0).toFixed(2)}`;
               }
 
               return (
                 <Popover.Root>
-                  <Popover.Trigger asChild>
-                    <button className="flex items-center gap-1 text-red-600 hover:text-red-700 font-medium group">
-                      <AlertCircle className="w-4 h-4" />
-                      <span className="text-sm">Sin precio</span>
-                    </button>
-                  </Popover.Trigger>
+                  <HoverCard.Root openDelay={100} closeDelay={100}>
+                    <HoverCard.Trigger asChild>
+                      <button className="flex items-center gap-1 text-red-600 hover:text-red-700 font-medium group">
+                        <AlertCircle className="w-5 h-5 cursor-pointer" />
+                        <span className="text-sm">Sin precio</span>
+                      </button>
+                    </HoverCard.Trigger>
+
+                    <HoverCard.Content
+                      side="top"
+                      align="center"
+                      className="
+                      bg-red-50 
+                      border 
+                      shadow-lg 
+                      rounded-lg 
+                      px-3 py-2 
+                      text-sm 
+                      text-red-700
+                      animate-in fade-in zoom-in-95
+                    "
+                    >
+                      Este producto aún no tiene precio asignado.
+                    </HoverCard.Content>
+                  </HoverCard.Root>
                   <Popover.Portal>
                     <Popover.Content
                       className="z-50 w-72 rounded-lg border border-red-300 bg-red-50 p-4 shadow-lg"
@@ -422,7 +448,8 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
                               Producto sin precio de venta
                             </p>
                             <p className="text-xs text-red-700">
-                              Este producto no puede estar activo hasta que se asigne un precio de venta.
+                              Este producto no puede estar activo hasta que se
+                              asigne un precio de venta.
                             </p>
                           </div>
                         </div>
@@ -450,31 +477,74 @@ async function handlePriceUpdate(productId: number, salePrice: number) {
           {
             key: "isActive",
             label: "Activo",
-            render: (item: ProductResponse) => (
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  item.isActive
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {item.isActive ? "Activo" : "Inactivo"}
-              </span>
-            ),
+            render: (item: ProductResponse) => {
+              const isInactive = !item.isActive;
+
+              // ===== Motivo =====
+              let reason = "Producto inactivo.";
+
+              const noStock = !item.stock || item.stock === 0;
+              const noPrice = !item.salePrice || item.salePrice === 0;
+
+              if (noStock && noPrice) {
+                reason = "No está activo porque no tiene stock ni precio.";
+              } else if (noStock) {
+                reason = "No está activo porque no hay stock disponible.";
+              } else if (noPrice) {
+                reason = "No está activo porque no tiene precio asignado.";
+              }
+
+              const badge = (
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    item.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {item.isActive ? "Activo" : "Inactivo"}
+                </span>
+              );
+
+              // Activo → sin hover
+              if (!isInactive) return badge;
+
+              // Inactivo → con hover
+              return (
+                <HoverCard.Root openDelay={150} closeDelay={200}>
+                  <HoverCard.Trigger asChild>{badge}</HoverCard.Trigger>
+
+                  <HoverCard.Content
+                    side="top"
+                    align="center"
+                    className="
+            bg-white border border-gray-200
+            shadow-xl rounded-xl
+            px-3 py-2
+            text-sm text-gray-700
+            max-w-xs
+            animate-in fade-in zoom-in-95
+          "
+                  >
+                    {reason}
+                  </HoverCard.Content>
+                </HoverCard.Root>
+              );
+            },
           },
 
           { key: "categoryName", label: "Categoría" },
         ]}
         actions={(item) => (
           <div className="flex gap-2 justify-center">
-            <button 
+            <button
               onClick={() => handleOpenDetailModal(item)}
               className="bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600"
             >
               Ver
             </button>
             {(!item.salePrice || item.salePrice === 0) && (
-              <button 
+              <button
                 onClick={() => handleOpenPriceModal(item)}
                 className="bg-green-500 px-3 py-1 text-white rounded-md hover:bg-green-600 flex items-center gap-1"
               >

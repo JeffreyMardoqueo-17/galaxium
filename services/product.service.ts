@@ -28,7 +28,9 @@ export async function getProducts(): Promise<ProductResponse[]> {
   });
 
   if (!res.ok) {
-    throw new Error("Error al obtener productos");
+    const errorText = await res.text(); // 👈 clave
+    console.error("Backend error:", errorText);
+    throw new Error(errorText || "Error al obtener productos");
   }
 
   return res.json();
@@ -37,9 +39,7 @@ export async function getProducts(): Promise<ProductResponse[]> {
 // ===============================
 // GET PRODUCT BY ID
 // ===============================
-export async function getProductById(
-  id: number
-): Promise<ProductResponse> {
+export async function getProductById(id: number): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
@@ -56,7 +56,7 @@ export async function getProductById(
 // CREATE PRODUCT
 // ===============================
 export async function createProduct(
-  data: ProductCreateRequest
+  data: ProductCreateRequest,
 ): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product`, {
     method: "POST",
@@ -76,7 +76,7 @@ export async function createProduct(
 // ===============================
 export async function updateProduct(
   id: number,
-  data: ProductUpdateRequest
+  data: ProductUpdateRequest,
 ): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product/${id}`, {
     method: "PUT",
@@ -95,7 +95,7 @@ export async function updateProduct(
 // GET PRODUCTS BY FILTER
 // ===============================
 export async function getProductsByFilter(
-  filter: ProductFilterRequest
+  filter: ProductFilterRequest,
 ): Promise<ProductResponse[]> {
   const queryParams = new URLSearchParams();
 
@@ -119,12 +119,11 @@ export async function getProductsByFilter(
   return res.json();
 }
 
-
 // ===============================
 // UPDATE PRODUCT PRICE
 // ===============================
 export async function updateProductPrice(
-  data: ProductUpdatePriceRequest
+  data: ProductUpdatePriceRequest,
 ): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product/price`, {
     method: "PATCH",

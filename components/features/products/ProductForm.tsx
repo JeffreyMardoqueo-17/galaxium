@@ -15,7 +15,7 @@ interface CreateProductModalProps {
   onOpenChange: (open: boolean) => void;
   categories: CategoryRead[];
   onProductCreate: (
-    product: ProductCreateRequest
+    product: ProductCreateRequest,
   ) => Promise<{ id: number } | number | void> | { id: number } | number | void;
 }
 
@@ -26,9 +26,13 @@ export function CreateProductModal({
   onProductCreate,
 }: CreateProductModalProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [createdProductId, setCreatedProductId] = React.useState<number | null>(null);
+  const [createdProductId, setCreatedProductId] = React.useState<number | null>(
+    null,
+  );
   const [showPhotoStep, setShowPhotoStep] = React.useState(false);
-  const [createdMessage, setCreatedMessage] = React.useState<string | null>(null);
+  const [createdMessage, setCreatedMessage] = React.useState<string | null>(
+    null,
+  );
 
   const [formData, setFormData] = React.useState<ProductCreateRequest>({
     categoryId: 0,
@@ -79,7 +83,7 @@ export function CreateProductModal({
         setCreatedMessage("Producto creado correctamente.");
       } else {
         setCreatedMessage(
-          "Producto creado correctamente. Puedes subir la foto más tarde."
+          "Producto creado correctamente. Puedes subir la foto más tarde.",
         );
       }
     } catch (error) {
@@ -91,7 +95,7 @@ export function CreateProductModal({
 
   function handleInputChange(
     field: keyof ProductCreateRequest,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -134,7 +138,8 @@ export function CreateProductModal({
               Crear Nuevo Producto
             </DialogPrimitive.Title>
             <DialogPrimitive.Description className="mb-4 text-sm text-gray-600">
-              Completa el formulario para registrar un nuevo producto en el inventario.
+              Completa el formulario para registrar un nuevo producto en el
+              inventario.
             </DialogPrimitive.Description>
 
             {createdMessage && (
@@ -149,8 +154,12 @@ export function CreateProductModal({
                     Categoría <span className="text-red-600">*</span>
                   </label>
                   <SelectPrimitive.Root
-                    value={formData.categoryId ? formData.categoryId.toString() : ""}
-                    onValueChange={(val) => handleInputChange("categoryId", Number(val))}
+                    value={
+                      formData.categoryId ? formData.categoryId.toString() : ""
+                    }
+                    onValueChange={(val) =>
+                      handleInputChange("categoryId", Number(val))
+                    }
                   >
                     <SelectPrimitive.Trigger
                       id="category"
@@ -187,7 +196,9 @@ export function CreateProductModal({
                             value={cat.id.toString()}
                             className="relative flex cursor-pointer select-none items-center rounded-md px-8 py-2 text-gray-700 data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
                           >
-                            <SelectPrimitive.ItemText>{cat.name}</SelectPrimitive.ItemText>
+                            <SelectPrimitive.ItemText>
+                              {cat.name}
+                            </SelectPrimitive.ItemText>
                           </SelectPrimitive.Item>
                         ))}
                       </SelectPrimitive.Viewport>
@@ -195,77 +206,41 @@ export function CreateProductModal({
                     </SelectPrimitive.Content>
                   </SelectPrimitive.Root>
                   {errors.categoryId && (
-                    <p className="mt-1 text-sm text-red-600">{errors.categoryId}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.categoryId}
+                    </p>
                   )}
                 </div>
 
-                {/* Nombre */}
-                <div>
-                  <label htmlFor="name" className="block mb-1 font-medium">
-                    Nombre del Producto <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    placeholder="Ej: Laptop HP 15"
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                  />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                  )}
-                </div>
-
-                {/* Precios */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Nombre */}
                   <div>
-                    <label htmlFor="costPrice" className="block mb-1 font-medium">
-                      Precio de Costo <span className="text-red-600">*</span>
+                    <label htmlFor="name" className="block mb-1 font-medium">
+                      Nombre del Producto{" "}
+                      <span className="text-red-600">*</span>
                     </label>
                     <input
-                      id="costPrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
+                      id="name"
+                      type="text"
+                      placeholder="Ej: Laptop HP 15"
                       className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={formData.costPrice || ""}
+                      value={formData.name}
                       onChange={(e) =>
-                        handleInputChange("costPrice", parseFloat(e.target.value) || 0)
+                        handleInputChange("name", e.target.value)
                       }
                     />
-                    {errors.costPrice && (
-                      <p className="mt-1 text-sm text-red-600">{errors.costPrice}</p>
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                     )}
                   </div>
-                  <div>
-                    <label htmlFor="salePrice" className="block mb-1 font-medium">
-                      Precio de Venta <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                      id="salePrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={formData.salePrice || ""}
-                      onChange={(e) =>
-                        handleInputChange("salePrice", parseFloat(e.target.value) || 0)
-                      }
-                    />
-                    {errors.salePrice && (
-                      <p className="mt-1 text-sm text-red-600">{errors.salePrice}</p>
-                    )}
-                  </div>
-                </div>
 
-                {/* Stock */}
-                <div className="grid grid-cols-2 gap-4">
+                  {/* Stock mínimo */}
                   <div>
-                    <label htmlFor="minimumStock" className="block mb-1 font-medium">
-                      Stock Mínimo <span className="text-red-600">*</span>
+                    <label
+                      htmlFor="minimumStock"
+                      className="block mb-1 font-medium"
+                    >
+                      Stock Mínimo (Opcional)
                     </label>
                     <input
                       id="minimumStock"
@@ -273,32 +248,16 @@ export function CreateProductModal({
                       min="0"
                       placeholder="0"
                       className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={formData.minimumStock || ""}
+                      value={formData.minimumStock ?? ""}
                       onChange={(e) =>
-                        handleInputChange("minimumStock", parseInt(e.target.value) || 0)
+                        handleInputChange(
+                          "minimumStock",
+                          e.target.value === ""
+                            ? 0
+                            : parseInt(e.target.value),
+                        )
                       }
                     />
-                    {errors.minimumStock && (
-                      <p className="mt-1 text-sm text-red-600">{errors.minimumStock}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between rounded border p-4">
-                    <div>
-                      <label htmlFor="isActive" className="block font-medium">
-                        Producto Activo
-                      </label>
-                      <p className="text-sm text-gray-600">
-                        El producto estará disponible para la venta
-                      </p>
-                    </div>
-                    <SwitchPrimitive.Root
-                      id="isActive"
-                      checked={formData.isActive}
-                      onCheckedChange={(checked) => handleInputChange("isActive", checked)}
-                      className="w-[42px] h-[25px] bg-gray-200 rounded-full relative cursor-pointer"
-                    >
-                      <SwitchPrimitive.Thumb className="block w-[21px] h-[21px] bg-white rounded-full shadow-md translate-x-0 data-[state=checked]:translate-x-[17px] transition-transform duration-200" />
-                    </SwitchPrimitive.Root>
                   </div>
                 </div>
 

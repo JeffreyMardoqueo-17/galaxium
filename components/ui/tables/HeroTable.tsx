@@ -78,7 +78,7 @@ export function HeroTable<T extends { id: string | number }>({
 
       {/* ================= DESKTOP (TABLE) ================= */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-150table-auto border-collapse">
+        <table className="w-full min-w-150table-auto border-collapse select-none">
           <thead>
             <tr className="border-b bg-muted/50 bg-gray-100 ">
               {columns.map(({ key, label, align }) => (

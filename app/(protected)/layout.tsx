@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HeroUIProvider } from "@heroui/react";
+import { Toaster } from "react-hot-toast";
 
 import SidebarMenu from "./Layout/SidebarMenu";
 import AppNavBar from "./Layout/NavBar";
@@ -38,6 +39,7 @@ export default function ProtectedLayout({
 
   return (
     <HeroUIProvider>
+      <Toaster />
       <div className="flex h-screen bg-[var(--color-body)] overflow-hidden">
         
         {/* SIDEBAR */}
