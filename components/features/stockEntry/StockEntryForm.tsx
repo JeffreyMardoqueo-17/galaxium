@@ -76,7 +76,7 @@ export function CreateStockEntryModal({
     try {
       await onStockEntryCreate(formData);
 
-      // Reset form
+      // ✅ Solo si llega aquí (sin error), limpiamos y cerramos
       setFormData({
         productId: 0,
         quantity: 0,
@@ -87,6 +87,8 @@ export function CreateStockEntryModal({
       setErrors({});
       onOpenChange(false);
     } catch (error) {
+      // ❌ El error ya fue manejado en la página con showToast
+      // NO cerramos el modal para que el usuario pueda corregir
       console.error("Error creando entrada de stock:", error);
     } finally {
       setIsSubmitting(false);

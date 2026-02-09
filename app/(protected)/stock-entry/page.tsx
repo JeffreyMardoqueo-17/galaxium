@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { HeroTable } from "@/components/ui/tables";
 import { CreateStockEntryModal } from "@/components/features/stockEntry/StockEntryForm";
 import { StockEntryDetailModal } from "@/components/features/stockEntry/StockEntryVerMas";
+import { showToast } from "@/components/ui/modales/Toast";
 import {
   StockEntryCreate,
   StockEntryResponse,
@@ -17,6 +18,7 @@ import { getProducts } from "@/services/product.service";
 import type { ProductResponse } from "@/types/product";
 import { IoIosCreate } from "react-icons/io";
 import { formatDate } from "@/utils/formatDate";
+
 
 // Helper para mostrar tipos en español
 function getReferenceTypeLabel(type: string): string {
@@ -73,8 +75,13 @@ export default function StockEntryPage() {
     try {
       const data = await getStockEntries();
       setStockEntries(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cargando entradas de stock", error);
+      showToast({
+        title: "Error al cargar",
+        description: error.message || "No se pudieron cargar las entradas de stock",
+        color: "danger",
+      });
     } finally {
       setLoadingStockEntries(false);
     }
@@ -88,8 +95,13 @@ export default function StockEntryPage() {
     try {
       const data = await getProducts();
       setProducts(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cargando productos", error);
+      showToast({
+        title: "Error al cargar",
+        description: error.message || "No se pudieron cargar los productos",
+        color: "danger",
+      });
     } finally {
       setLoadingProducts(false);
     }
@@ -106,17 +118,40 @@ export default function StockEntryPage() {
   // ===============================
   // CREATE STOCK ENTRY
   // ===============================
-  async function handleStockEntryCreate(stockEntry: StockEntryCreate) {
-    try {
-      await createStockEntry(stockEntry);
-      setModalOpen(false);
-      await loadStockEntries();
-      await loadProducts(); // Recargar productos para ver stock actualizado
-    } catch (error) {
-      console.error("Error creando entrada de stock:", error);
-      throw error;
-    }
+async function handleStockEntryCreate(stockEntry: StockEntryCreate) {
+  console.log("🚀 Intentando crear entrada de stock...", stockEntry);
+  try {
+    const result = await createStockEntry(stockEntry);
+    console.log("✅ Entrada creada exitosamente:", result);
+
+    // ✅ SUCCESS
+    showToast({
+      title: "Entrada registrada",
+      description: "La entrada fue creada correctamente",
+      color: "success",
+    });
+
+    setModalOpen(false);
+    await loadStockEntries();
+    await loadProducts();
+
+  } catch (error: any) {
+    console.error("❌ Error del backend:", error);
+
+    // 🔴 MENSAJE DEL BACKEND
+    showToast({
+      title: "Movimiento rechazado",
+      description:
+        error.message ||
+        "No se pudo registrar la entrada",
+      color: "danger",
+    });
+
+    // 👇 CLAVE → evita que el modal se cierre
+    throw error;
   }
+}
+
 
   // ===============================
   // OPEN DETAIL MODAL
@@ -134,13 +169,29 @@ export default function StockEntryPage() {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Entradas de Stock</h1>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-md cursor-pointer hover:bg-green-700"
-        >
-          <IoIosCreate size={20} />
-          Nueva Entrada
-        </button>
+        <div className="flex gap-2">
+          {/* 🧪 Botón de prueba de Toast */}
+          <button
+            onClick={() => {
+              console.log("🧪 Probando toast...");
+              showToast({
+                title: "Prueba de Toast",
+                description: "Si ves esto, el toast funciona correctamente",
+                color: "success",
+              });
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            🧪 Probar Toast
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-md cursor-pointer hover:bg-green-700"
+          >
+            <IoIosCreate size={20} />
+            Nueva Entrada
+          </button>
+        </div>
       </div>
 
       {/* LOADING VISUAL */}
@@ -245,3 +296,4 @@ export default function StockEntryPage() {
     </div>
   );
 }
+

@@ -3,6 +3,7 @@ import {
   ProductUpdateRequest,
   ProductResponse,
   ProductFilterRequest,
+  ProductUpdatePriceRequest,
 } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
@@ -18,27 +19,16 @@ function getAuthHeaders() {
 }
 
 // ===============================
-// GET ALL PRODUCTS
+// GET ALL PRODUCTS (ACTIVE ONLY)
 // ===============================
 export async function getProducts(): Promise<ProductResponse[]> {
-  const res = await fetch(`${API_URL}/Product`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-
-  if (!res.ok) {
-    throw new Error("Error al obtener productos");
-  }
-
-  return res.json();
+  return getProductsByFilter({ isActive: true, pageSize: 1000 });
 }
 
 // ===============================
 // GET PRODUCT BY ID
 // ===============================
-export async function getProductById(
-  id: number
-): Promise<ProductResponse> {
+export async function getProductById(id: number): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
@@ -55,7 +45,7 @@ export async function getProductById(
 // CREATE PRODUCT
 // ===============================
 export async function createProduct(
-  data: ProductCreateRequest
+  data: ProductCreateRequest,
 ): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product`, {
     method: "POST",
@@ -75,7 +65,7 @@ export async function createProduct(
 // ===============================
 export async function updateProduct(
   id: number,
-  data: ProductUpdateRequest
+  data: ProductUpdateRequest,
 ): Promise<ProductResponse> {
   const res = await fetch(`${API_URL}/Product/${id}`, {
     method: "PUT",
@@ -92,9 +82,21 @@ export async function updateProduct(
 
 // ===============================
 // GET PRODUCTS BY FILTER
+ // ===============================
+        // GET: api/product/filter
+        // GET /api/product/filter?
+        // categoryId=2
+        // &minPrice=50
+        // &maxPrice=200
+        // &minStock=10
+        // &maxStock=20
+        // &orderBy=SalePrice
+        // &orderDescending=false
+        // &page=1
+        // &pageSize=20
 // ===============================
 export async function getProductsByFilter(
-  filter: ProductFilterRequest
+  filter: ProductFilterRequest,
 ): Promise<ProductResponse[]> {
   const queryParams = new URLSearchParams();
 
@@ -113,6 +115,26 @@ export async function getProductsByFilter(
 
   if (!res.ok) {
     throw new Error("Error al obtener productos filtrados");
+  }
+
+  return res.json();
+}
+
+// ===============================
+// UPDATE PRODUCT PRICE
+// ===============================
+export async function updateProductPrice(
+  data: ProductUpdatePriceRequest,
+): Promise<ProductResponse> {
+  const res = await fetch(`${API_URL}/Product/price`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "Error al actualizar el precio del producto");
   }
 
   return res.json();

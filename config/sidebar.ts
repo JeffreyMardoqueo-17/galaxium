@@ -30,7 +30,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   },
   {
     label: "Ventas",
-    href: "/ventas",
+    href: "/sale",
     icon: ShoppingCart,
   },
   {
