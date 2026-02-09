@@ -19,21 +19,10 @@ function getAuthHeaders() {
 }
 
 // ===============================
-// GET ALL PRODUCTS
+// GET ALL PRODUCTS (ACTIVE ONLY)
 // ===============================
 export async function getProducts(): Promise<ProductResponse[]> {
-  const res = await fetch(`${API_URL}/Product`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text(); // 👈 clave
-    console.error("Backend error:", errorText);
-    throw new Error(errorText || "Error al obtener productos");
-  }
-
-  return res.json();
+  return getProductsByFilter({ isActive: true, pageSize: 1000 });
 }
 
 // ===============================
@@ -93,6 +82,18 @@ export async function updateProduct(
 
 // ===============================
 // GET PRODUCTS BY FILTER
+ // ===============================
+        // GET: api/product/filter
+        // GET /api/product/filter?
+        // categoryId=2
+        // &minPrice=50
+        // &maxPrice=200
+        // &minStock=10
+        // &maxStock=20
+        // &orderBy=SalePrice
+        // &orderDescending=false
+        // &page=1
+        // &pageSize=20
 // ===============================
 export async function getProductsByFilter(
   filter: ProductFilterRequest,

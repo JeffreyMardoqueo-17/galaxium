@@ -4,6 +4,7 @@
 export interface ProductCreateRequest {
   categoryId: number;
   name: string;
+  barcode?: string;
   costPrice: number | null;
   salePrice: number | null;
   initialStock: number;
@@ -29,6 +30,7 @@ export interface ProductResponse {
   id: number;
   name: string;
   sku: string;
+  barcode: string | null;
   costPrice: number | null;
   salePrice: number | null;
   stock: number | null;
@@ -49,6 +51,7 @@ export interface ProductResponse {
 export interface ProductFilterRequest {
   categoryId?: number;
   name?: string;
+  barCode?: string;
 
   minPrice?: number;
   maxPrice?: number;

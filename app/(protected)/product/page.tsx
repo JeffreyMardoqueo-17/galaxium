@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import * as HoverCard from "@radix-ui/react-hover-card";
-import { AlertCircle, DollarSign } from "lucide-react";
+import { AlertCircle, DollarSign, ScanLine } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 import { HeroTable } from "@/components/ui/tables";
 import { CreateProductModal } from "@/components/features/products/ProductForm";
@@ -26,6 +27,8 @@ import type { CategoryRead } from "@/types/category";
 import { IoIosCreate, IoIosColorFilter } from "react-icons/io";
 import { MdCleaningServices } from "react-icons/md";
 export default function ProductsPage() {
+  const router = useRouter();
+  
   // ===============================
   // STATE
   // ===============================
@@ -176,13 +179,22 @@ export default function ProductsPage() {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Productos</h1>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md cursor-pointer"
-        >
-          <IoIosCreate size={20} />
-          Nuevo producto
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/product/add")}
+            className="flex items-center gap-2 px-5 py-2 bg-purple-600 text-white rounded-md cursor-pointer hover:bg-purple-700 transition"
+          >
+            <ScanLine size={20} />
+            Escanear Producto
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700 transition"
+          >
+            <IoIosCreate size={20} />
+            Nuevo producto
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 p-4 rounded-md bg-white shadow-sm">
@@ -363,6 +375,7 @@ export default function ProductsPage() {
         data={products}
         columns={[
           { key: "name", label: "Nombre" },
+          { key: "barcode", label: "Código de barras" },
 
           {
             key: "stock",

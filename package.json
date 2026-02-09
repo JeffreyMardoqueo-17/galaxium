@@ -15,6 +15,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/themes": "^3.2.1",
+    "@zxing/library": "^0.21.3",
     "framer-motion": "^12.29.2",
     "fs": "^0.0.1-security",
     "https": "^1.0.0",
