@@ -66,8 +66,6 @@ export default function StockEntryPage() {
     page: 1,
     pageSize: 10,
   });
-
-  // ===============================
   // LOAD STOCK ENTRIES
   // ===============================
   async function loadStockEntries() {
