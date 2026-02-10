@@ -14,7 +14,7 @@ import {
   getStockEntries,
   createStockEntry,
 } from "@/services/stock-entry.service";
-import { getProducts } from "@/services/product.service";
+import { getProducts, getAllProducts } from "@/services/product.service";
 import type { ProductResponse } from "@/types/product";
 import { IoIosCreate } from "react-icons/io";
 import { formatDate } from "@/utils/formatDate";
@@ -93,7 +93,7 @@ export default function StockEntryPage() {
   async function loadProducts() {
     setLoadingProducts(true);
     try {
-      const data = await getProducts();
+      const data = await getAllProducts();
       setProducts(data);
     } catch (error: any) {
       console.error("Error cargando productos", error);
