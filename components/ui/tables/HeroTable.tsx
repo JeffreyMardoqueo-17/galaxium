@@ -42,7 +42,7 @@ export function HeroTable<T extends { id: string | number }>({
   }, [data, page, pageSize]);
 
   return (
-    <div className="rounded-xl shadow-sm bg-(--color-page) space-y-4">
+    <div className="rounded-2xl shadow-sm bg-[var(--color-page)] space-y-4 border border-gray-200/70">
       {/* ================= MOBILE (CARDS) ================= */}
       <div className="space-y-4 md:hidden p-4">
         {paginatedData.length === 0 && (
@@ -54,21 +54,21 @@ export function HeroTable<T extends { id: string | number }>({
         {paginatedData.map((item) => (
           <div
             key={item.id}
-            className="border rounded-lg p-4 space-y-2 bg-background shadow-sm"
+            className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
           >
             {columns.map(({ key, label, render }) => (
-              <div key={String(key)} className="flex justify-between gap-2">
-                <span className="text-sm font-semibold text-muted-foreground">
+              <div key={String(key)} className="flex justify-between gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   {label}
                 </span>
-                <span className="text-sm text-right">
+                <span className="text-sm text-right text-gray-900">
                   {render ? render(item) : String(item[key])}
                 </span>
               </div>
             ))}
 
             {actions && (
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-3 flex justify-end gap-2">
                 {actions(item)}
               </div>
             )}
@@ -78,13 +78,13 @@ export function HeroTable<T extends { id: string | number }>({
 
       {/* ================= DESKTOP (TABLE) ================= */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-150table-auto border-collapse select-none">
+        <table className="w-full min-w-full table-auto border-collapse select-none">
           <thead>
-            <tr className="border-b bg-muted/50 bg-gray-100 ">
+            <tr className="border-b bg-gray-100">
               {columns.map(({ key, label, align }) => (
                 <th
                   key={String(key)}
-                  className={`p-4 text-sm font-medium ${
+                  className={`p-4 text-xs font-semibold uppercase tracking-wide text-gray-800 ${
                     align === "end"
                       ? "text-right"
                       : align === "center"
@@ -96,7 +96,7 @@ export function HeroTable<T extends { id: string | number }>({
                 </th>
               ))}
               {actions && (
-                <th className="p-4 text-sm font-medium text-center">
+                <th className="p-4 text-xs font-semibold uppercase tracking-wide text-center text-gray-800">
                   Acciones
                 </th>
               )}
@@ -108,7 +108,7 @@ export function HeroTable<T extends { id: string | number }>({
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className="text-center p-8 text-muted-foreground"
+                  className="text-center p-10 text-muted-foreground"
                 >
                   No hay datos para mostrar
                 </td>
@@ -118,12 +118,12 @@ export function HeroTable<T extends { id: string | number }>({
             {paginatedData.map((item) => (
               <tr
                 key={item.id}
-                className=" last:border-b-0 hover:bg-muted/20 transition"
+                className="border-b last:border-b-0 hover:bg-gray-50 transition"
               >
                 {columns.map(({ key, render, align }) => (
                   <td
                     key={String(key)}
-                    className={`p-4 text-sm ${
+                    className={`p-4 text-sm text-shadow-gray-600 ${
                       align === "end"
                         ? "text-right"
                         : align === "center"
@@ -153,7 +153,7 @@ export function HeroTable<T extends { id: string | number }>({
           <button
             disabled={!canGoPrev}
             onClick={() => onPageChange(page - 1)}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
+            className="px-3 py-1 rounded-md border text-sm disabled:opacity-40 hover:bg-gray-50"
           >
             Anterior
           </button>
@@ -161,7 +161,7 @@ export function HeroTable<T extends { id: string | number }>({
           <button
             disabled={!canGoNext}
             onClick={() => onPageChange(page + 1)}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
+            className="px-3 py-1 rounded-md border text-sm disabled:opacity-40 hover:bg-gray-50"
           >
             Siguiente
           </button>

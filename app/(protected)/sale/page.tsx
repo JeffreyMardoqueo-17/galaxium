@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Trash2, Search, ShoppingCart, AlertCircle } from "lucide-react";
+import { Trash2, Search, ShoppingCart, AlertCircle, Barcode, X } from "lucide-react";
+import BarcodeScanner from "@/components/features/BarcodeScanner";
 
 import { ProductResponse } from "@/types/product";
 import { CustomerResponseDTO } from "@/types/custoner";
@@ -48,6 +49,7 @@ export default function Page() {
   // Barcode scanner
   const [barcodeInput, setBarcodeInput] = React.useState("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
+  const [showScanner, setShowScanner] = React.useState(false);
 
   // Customer search
   const [customerSearch, setCustomerSearch] = React.useState("");
@@ -109,7 +111,6 @@ export default function Page() {
     filterProducts();
   }, [selectedCategoryId, products]);
 
-  // ===============================
   // CUSTOMER SEARCH
   // ===============================
   React.useEffect(() => {
@@ -133,7 +134,6 @@ export default function Page() {
     setCustomerSearch("");
     setShowCustomerDropdown(false);
   }
-
   // ===============================
   // BARCODE SCANNER
   // ===============================
@@ -171,12 +171,37 @@ export default function Page() {
           productId,
           name: product.name,
           price: product.salePrice ?? 0,
+          stock: product.stock,
           quantity: 1,
           barCode: product.barcode || "",
         },
       ];
     });
   }
+  // ===============================
+  // BARCODE CAMERA SCANNER
+  // ===============================
+  const handleBarcodeDetected = (code: string) => {
+    console.log("[SALE] Código detectado:", code);
+    setShowScanner(false);
+
+    // Buscar producto por código de barras
+    const product = products.find(
+      (p) => p.barcode?.toLowerCase() === code.toLowerCase()
+    );
+    
+    if (product) {
+      addProductFromBarcode(product.id, product);
+      // Mostrar notificación visual
+      // alert(`✓ Producto agregado: ${product.name}`);
+    } else {
+      // alert(`❌ No se encontró producto con código: ${code}`);
+    }
+  };
+
+  const handleScannerError = (message: string) => {
+    console.error("[SALE] Error escáner:", message);
+  };
 
   // ===============================
   // ADD PRODUCT
@@ -356,14 +381,48 @@ export default function Page() {
 
                     {/* BARCODE SCANNER */}
                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-6">
-                      <label className="block text-sm font-semibold text-gray-900 mb-3">
-                        📱 Escanear Código de Barras
-                      </label>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-semibold text-gray-900">
+                          📱 Escanear Código de Barras
+                        </label>
+                        {!showScanner && (
+                          <button
+                            type="button"
+                            onClick={() => setShowScanner(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition text-sm font-medium"
+                          >
+                            <Barcode className="w-4 h-4" />
+                            Abrir Cámara
+                          </button>
+                        )}
+                      </div>
+
+                      {/* SCANNER DE CÁMARA */}
+                      {showScanner && (
+                        <div className="mb-4 p-4 bg-white rounded-lg border-2 border-purple-300">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-semibold text-purple-900">Escanear con Cámara</h3>
+                            <button
+                              type="button"
+                              onClick={() => setShowScanner(false)}
+                              className="text-purple-600 hover:text-purple-800"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <BarcodeScanner
+                            onDetected={handleBarcodeDetected}
+                            onError={handleScannerError}
+                          />
+                        </div>
+                      )}
+
+                      {/* INPUT MANUAL */}
                       <div className="relative">
                         <input
                           ref={barcodeInputRef}
                           type="text"
-                          placeholder="Escanea el código de barras del producto"
+                          placeholder="O escribe el código y presiona Enter"
                           className="w-full px-4 py-4 pl-12 rounded-lg border-2 border-green-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition bg-white"
                           value={barcodeInput}
                           onChange={(e) => setBarcodeInput(e.target.value)}
@@ -372,7 +431,7 @@ export default function Page() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600" />
                       </div>
                       <p className="text-xs text-gray-600 mt-2">
-                        💡 Escanea o escribe el código y presiona Enter
+                        💡 Usa la cámara o escribe manualmente y presiona Enter
                       </p>
                     </div>
 

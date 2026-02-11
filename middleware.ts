@@ -8,6 +8,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/product/:path") ||
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
@@ -22,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/users/:path*", "/ventas/:path*", "/category/:path*", "/product/:path*"],
+  matcher: ["/", "/dashboard/:path*", "/users/:path*", "/ventas/:path*", "/category/:path*"],
 };

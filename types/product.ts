@@ -1,5 +1,8 @@
 // ===============================
 // CREATE
+
+import { ProductPhoto } from "./product-photo";
+
 // ===============================
 export interface ProductCreateRequest {
   categoryId: number;
@@ -72,4 +75,31 @@ export interface ProductFilterRequest {
 export interface ProductUpdatePriceRequest {
   productId: number;
   newPrice: number;
+}
+
+
+// ===============================
+// PRODUCT WITH PHOTOS RESPONSE
+// ===============================
+export interface ProductWithPhotosResponse {
+  id: number;
+  name: string;
+  sku: string;
+  barcode: string | null;
+
+  costPrice: number | null;
+  salePrice: number | null;
+  stock: number | null;
+  minimumStock: number;
+
+  isActive: boolean;
+  createdAt: string;
+
+  categoryId: number;
+  categoryName: string | null;
+
+  createdByUserId: number;
+  createdByUserName: string;
+
+  photos: ProductPhoto[];
 }

@@ -3,19 +3,11 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import {
-  ArrowLeft,
-  Camera,
-  CameraOff,
-  Package,
-  CheckCircle2,
-  Loader2,
-  ScanLine,
-} from "lucide-react";
-import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
+import { ArrowLeft, CheckCircle2, Loader2, ScanLine } from "lucide-react";
 
 import { ProductCreateRequest } from "@/types/product";
 import { CategoryRead } from "@/types/category";
+import BarcodeScanner from "@/components/features/BarcodeScanner";
 import { ProductPhotoForm } from "@/components/features/products/ProductPhotoForm";
 import { createProduct } from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
@@ -35,10 +27,7 @@ export default function AddProductPage() {
   const [showPhotoStep, setShowPhotoStep] = React.useState(false);
 
   // Scanner state
-  const [isScannerActive, setIsScannerActive] = React.useState(false);
   const [scannedCode, setScannedCode] = React.useState<string>("");
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const codeReaderRef = React.useRef<BrowserMultiFormatReader | null>(null);
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = React.useState({
@@ -73,75 +62,17 @@ export default function AddProductPage() {
   // ===============================
   // BARCODE SCANNER
   // ===============================
-  const startScanner = async () => {
-    try {
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-
-      const videoInputDevices = await codeReader.listVideoInputDevices();
-
-      if (videoInputDevices.length === 0) {
-        alert("No se encontró ninguna cámara disponible");
-        return;
-      }
-
-      // Priorizar cámara trasera en móviles
-      const backCamera = videoInputDevices.find(
-        (device) =>
-          device.label.toLowerCase().includes("back") ||
-          device.label.toLowerCase().includes("trasera"),
-      );
-      const selectedDeviceId =
-        backCamera?.deviceId || videoInputDevices[0].deviceId;
-
-      setIsScannerActive(true);
-
-      // Focus al input de barcode
-      setTimeout(() => {
-        barcodeInputRef.current?.focus();
-      }, 100);
-
-      codeReader.decodeFromVideoDevice(
-        selectedDeviceId,
-        videoRef.current!,
-        (result, error) => {
-          if (result) {
-            const code = result.getText();
-            setScannedCode(code);
-            handleInputChange("barcode", code);
-            stopScanner();
-          }
-          if (error && !(error instanceof NotFoundException)) {
-            console.error("Error escaneando:", error);
-          }
-        },
-      );
-    } catch (error) {
-      console.error("Error iniciando escáner:", error);
-      alert("No se pudo acceder a la cámara. Verifica los permisos.");
-    }
-  };
-
-  const stopScanner = () => {
-    if (codeReaderRef.current) {
-      codeReaderRef.current.reset();
-      codeReaderRef.current = null;
-    }
-    setIsScannerActive(false);
-  };
-
-  React.useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-  }, []);
-
-  // Auto focus barcode input for better scanning
-  React.useEffect(() => {
-    if (!isScannerActive) {
+  const handleBarcodeDetected = (code: string) => {
+    setScannedCode(code);
+    handleInputChange("barcode", code);
+    setTimeout(() => {
       barcodeInputRef.current?.focus();
-    }
-  }, [isScannerActive]);
+    }, 50);
+  };
+
+  const handleScannerError = (message: string) => {
+    alert(message);
+  };
 
   // ===============================
   // VALIDATION
@@ -349,7 +280,7 @@ export default function AddProductPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               {/* Scanner Header */}
-              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-6 py-5 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
                     <ScanLine className="w-5 h-5 text-white" />
@@ -358,61 +289,14 @@ export default function AddProductPage() {
                     Código de Barras
                   </h2>
                 </div>
-
-                {!isScannerActive ? (
-                  <button
-                    onClick={startScanner}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium text-sm"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Activar Cámara
-                  </button>
-                ) : (
-                  <button
-                    onClick={stopScanner}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition font-medium text-sm"
-                  >
-                    <CameraOff className="w-4 h-4" />
-                    Detener
-                  </button>
-                )}
               </div>
 
               {/* Scanner Content */}
               <div className="p-6">
-                {isScannerActive ? (
-                  <div className="space-y-4">
-                    <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
-                      <video
-                        ref={videoRef}
-                        className="w-full h-full object-cover"
-                        style={{ transform: "scaleX(-1)" }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="border-4 border-purple-500 w-2/3 h-2/3 rounded-lg shadow-lg" />
-                      </div>
-                      <div className="absolute top-4 left-4 right-4 flex justify-center">
-                        <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-lg text-white text-sm font-medium">
-                          🎯 Apunta a la cámara al código
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-center text-sm text-gray-600">
-                      La cámara está activa. Acerca el código de barras al marco central.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Camera className="w-8 h-8 text-purple-600" />
-                      </div>
-                      <p className="text-gray-600 font-medium">
-                        Activa la cámara para escanear
-                      </p>
-                    </div>
-                  </div>
-                )}
+                <BarcodeScanner
+                  onDetected={handleBarcodeDetected}
+                  onError={handleScannerError}
+                />
 
                 {scannedCode && (
                   <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg flex items-center gap-3">

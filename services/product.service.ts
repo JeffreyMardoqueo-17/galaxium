@@ -4,6 +4,7 @@ import {
   ProductResponse,
   ProductFilterRequest,
   ProductUpdatePriceRequest,
+  ProductWithPhotosResponse,
 } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
@@ -18,11 +19,20 @@ function getAuthHeaders() {
   };
 }
 
+
+
 // ===============================
 // GET ALL PRODUCTS (ACTIVE ONLY)
 // ===============================
 export async function getProducts(): Promise<ProductResponse[]> {
   return getProductsByFilter({ isActive: true, pageSize: 1000 });
+}
+
+// ===============================
+// GET ALL PRODUCTS (ACTIVE + INACTIVE)
+// ===============================
+export async function getAllProducts(): Promise<ProductResponse[]> {
+  return getProductsByFilter({ pageSize: 1000 });
 }
 
 // ===============================
@@ -135,6 +145,19 @@ export async function updateProductPrice(
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || "Error al actualizar el precio del producto");
+  }
+
+  return res.json();
+}
+
+export async function getProductsWithPhotos(): Promise<ProductWithPhotosResponse[]> {
+  const res = await fetch(`${API_URL}/Product/with-photos`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error("Error al obtener productos con fotos");
   }
 
   return res.json();
