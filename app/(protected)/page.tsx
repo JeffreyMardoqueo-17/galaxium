@@ -1,43 +1,95 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getCurrentUser } from "@/services/user.service";
-import { UserResponse } from "@/types/user";
+import React from "react";
+import { dashboardService } from "@/services/dashboard.service";
+import {
+  DashboardSummary,
+  TopSellingProductsResponse,
+} from "@/types/dasboard";
+import {
+  DashboardHeader,
+  MetricsGrid,
+  TopProductsList,
+  ExecutiveSummary,
+} from "@/components/ui/dasboard";
 
-export default function Home() {
-  const [user, setUser] = useState<UserResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+const currencyFormatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 2,
+});
 
-  useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+const numberFormatter = new Intl.NumberFormat("es-MX", {
+  maximumFractionDigits: 0,
+});
+
+export default function DashboardPage() {
+  const [summary, setSummary] = React.useState<DashboardSummary | null>(null);
+  const [topProducts, setTopProducts] =
+    React.useState<TopSellingProductsResponse | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [summaryData, topProductsData] = await Promise.all([
+          dashboardService.getSummary(),
+          dashboardService.getTopSellingProducts(5),
+        ]);
+        setSummary(summaryData);
+        setTopProducts(topProductsData);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Error inesperado";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Cargando...
-      </div>
-    );
-  }
+  const maxRevenue = React.useMemo(() => {
+    if (!topProducts?.products?.length) return 0;
+    return Math.max(...topProducts.products.map((p) => p.totalRevenue));
+  }, [topProducts]);
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <main className="flex h-full w-full max-w-3xl flex-col items-center justify-center py-32 px-16">
-        {user ? (
-          <>
-            <h1 className="text-3xl font-bold mb-4">
-              👋 Bienvenido, {user.username}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Estás dentro de <strong>Galaxium ERP</strong>
-            </p>
-          </>
-        ) : (
-          <p>No se pudo cargar el usuario</p>
+    <div className="min-h-auto bg-[radial-gradient(circle_at_top,_#f7f2ff,_#f6fafc_35%,_#f7f7fb_100%)]">
+      <DashboardHeader />
+
+      <main className="mx-auto max-w-6xl px-6 py-10">
+        {error && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
         )}
+
+        <MetricsGrid
+          summary={summary}
+          loading={loading}
+          currencyFormatter={currencyFormatter}
+          numberFormatter={numberFormatter}
+        />
+
+        <section className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+          <TopProductsList
+            topProducts={topProducts}
+            loading={loading}
+            maxRevenue={maxRevenue}
+            currencyFormatter={currencyFormatter}
+            numberFormatter={numberFormatter}
+          />
+
+          <ExecutiveSummary
+            summary={summary}
+            loading={loading}
+            currencyFormatter={currencyFormatter}
+          />
+        </section>
       </main>
     </div>
   );

@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ArrowLeft, CheckCircle2, Loader2, ScanLine } from "lucide-react";
 
-import { ProductCreateRequest } from "@/types/product";
+import { ProductCreateRequest, ProductResponse } from "@/types/product";
 import { CategoryRead } from "@/types/category";
 import BarcodeScanner from "@/components/features/BarcodeScanner";
 import { ProductPhotoForm } from "@/components/features/products/ProductPhotoForm";
-import { createProduct } from "@/services/product.service";
+import { createProduct, getProductsByFilter } from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
 
 export default function AddProductPage() {
@@ -29,6 +29,10 @@ export default function AddProductPage() {
   // Scanner state
   const [scannedCode, setScannedCode] = React.useState<string>("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Barcode validation state
+  const [duplicateProduct, setDuplicateProduct] = React.useState<ProductResponse | null>(null);
+  const [checkingBarcode, setCheckingBarcode] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
     categoryId: 0,
@@ -60,11 +64,59 @@ export default function AddProductPage() {
   }, []);
 
   // ===============================
+  // BARCODE VALIDATION
+  // ===============================
+  const checkBarcodeExists = React.useCallback(async (barcode: string) => {
+    if (!barcode || barcode.trim() === "") {
+      setDuplicateProduct(null);
+      return;
+    }
+
+    setCheckingBarcode(true);
+    try {
+      const products = await getProductsByFilter({
+        barCode: barcode.trim(),
+        pageSize: 100,
+      });
+
+      if (products && products.length > 0) {
+        const normalizedBarcode = barcode.trim().toLowerCase();
+        const exactMatch = products.find(
+          (product) => product.barcode?.toLowerCase() === normalizedBarcode,
+        );
+
+        setDuplicateProduct(exactMatch ?? null);
+      } else {
+        setDuplicateProduct(null);
+      }
+    } catch (error) {
+      console.error("Error verificando código de barras:", error);
+      setDuplicateProduct(null);
+    } finally {
+      setCheckingBarcode(false);
+    }
+  }, []);
+
+  // Debounce para validación al escribir manualmente
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.barcode) {
+        checkBarcodeExists(formData.barcode);
+      } else {
+        setDuplicateProduct(null);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.barcode, checkBarcodeExists]);
+
+  // ===============================
   // BARCODE SCANNER
   // ===============================
   const handleBarcodeDetected = (code: string) => {
     setScannedCode(code);
     handleInputChange("barcode", code);
+    checkBarcodeExists(code); // Validar inmediatamente al escanear
     setTimeout(() => {
       barcodeInputRef.current?.focus();
     }, 50);
@@ -95,6 +147,18 @@ export default function AddProductPage() {
   // ===============================
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    // Validar que no haya código duplicado
+    if (duplicateProduct) {
+      alert(
+        `❌ No se puede registrar el producto\n\n` +
+        `El código de barras "${formData.barcode}" ya está siendo usado por:\n` +
+        `"${duplicateProduct.name}"\n\n` +
+        `Por favor, usa un código de barras diferente o verifica el producto existente.`
+      );
+      return;
+    }
+    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -191,6 +255,7 @@ export default function AddProductPage() {
                     minimumStock: 0,
                   });
                   setScannedCode("");
+                  setDuplicateProduct(null);
                   setErrors({});
                 }}
                 className="w-full px-6 py-3 text-purple-600 hover:bg-purple-50 rounded-lg transition font-semibold text-sm"
@@ -404,7 +469,7 @@ export default function AddProductPage() {
                 )}
               </div>
 
-              {/* Barcode Field - Now Visible */}
+              {/* Barcode Field */}
               <div>
                 <label
                   htmlFor="barcode"
@@ -418,21 +483,60 @@ export default function AddProductPage() {
                     id="barcode"
                     type="text"
                     placeholder="Escanea o escribe el código"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition hover:border-gray-400 pr-10"
+                    className={`w-full px-4 py-3 rounded-lg border text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition hover:border-gray-400 pr-10 ${
+                      duplicateProduct 
+                        ? 'border-red-400 focus:ring-red-500 bg-red-50' 
+                        : 'border-gray-300 focus:ring-purple-500 focus:border-transparent'
+                    }`}
                     value={formData.barcode ?? ""}
                     onChange={(e) => handleInputChange("barcode", e.target.value)}
                   />
-                  {formData.barcode && (
+                  {checkingBarcode && formData.barcode && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                  )}
+                  {!checkingBarcode && formData.barcode && !duplicateProduct && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
                   )}
+                  {!checkingBarcode && duplicateProduct && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-600">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
-                <p className="mt-1.5 text-xs text-gray-500">
-                  💡 Haz clic en el código scanner o escribe manualmente
-                </p>
+                {duplicateProduct && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-300 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-red-900">
+                          ⚠️ Código de barras duplicado
+                        </p>
+                        <p className="text-xs text-red-800 mt-1">
+                          Este código ya está registrado con el producto:{" "}
+                          <span className="font-bold">"{duplicateProduct.name}"</span>
+                        </p>
+                        <p className="text-xs text-red-700 mt-1">
+                          SKU: {duplicateProduct.sku} • Categoría: {duplicateProduct.categoryName}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!duplicateProduct && !checkingBarcode && (
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    💡 Haz clic en el botón del escáner o escribe manualmente
+                  </p>
+                )}
               </div>
 
               {/* Stock Mínimo */}
@@ -471,13 +575,20 @@ export default function AddProductPage() {
               <div className="space-y-3 pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!duplicateProduct}
                   className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition font-semibold text-sm flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Guardando...
+                    </>
+                  ) : duplicateProduct ? (
+                    <>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                      </svg>
+                      Código Duplicado
                     </>
                   ) : (
                     <>
