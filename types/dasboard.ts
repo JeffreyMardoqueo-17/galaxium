@@ -17,7 +17,8 @@ export interface TopSellingProduct {
   productId: number;
   productName: string;
   totalSold: number;
-  totalRevenue: number;
+  totalRevenue?: number;
+  revenueGenerated?: number;
 }
 
 // ===============================
@@ -26,4 +27,22 @@ export interface TopSellingProduct {
 export interface TopSellingProductsResponse {
   requestedTop: number;
   products: TopSellingProduct[];
+}
+
+export interface DashboardSalesPoint {
+  label: string;
+  totalAmount: number;
+  totalTransactions: number;
+}
+
+export interface DashboardSalesAnalytics {
+  todayRevenue: number;
+  currentMonthRevenue: number;
+  currentYearRevenue: number;
+  bestSalesWeekday: string;
+  bestSalesWeekdayRevenue: number;
+  bestSalesWeekdayTransactions: number;
+  dailySeries: DashboardSalesPoint[];
+  monthlySeries: DashboardSalesPoint[];
+  yearlySeries: DashboardSalesPoint[];
 }

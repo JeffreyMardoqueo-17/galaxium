@@ -1,193 +1,212 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { HeroTable } from "@/components/ui/tables";
+import * as React from "react";
+import toast from "react-hot-toast";
+import { Mail, Pencil, Phone, Search, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { CreateCustomerModal } from "@/components/features/customer/CustomerFrom";
-import {
-  CustomerCreateRequestDTO,
-  CustomerResponseDTO,
-} from "@/types/custoner";
-import { getAuthHeaders } from "@/utils/getAddHeaders";
+import { createCustomer, GetAllCustomers } from "@/services/customer.service";
+import { CustomerCreateRequestDTO, CustomerResponseDTO } from "@/types/custoner";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
-
-/* ================= API ================= */
-
-async function fetchCustomers(): Promise<CustomerResponseDTO[]> {
-  const res = await fetch(`${API_URL}/Customer`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-
-  if (!res.ok) throw new Error("Error al obtener clientes");
-
-  const data = await res.json();
-
-  // 🔥 Normalización por si backend manda PascalCase
-  return data.map((c: any) => ({
-    id: c.id ?? c.Id,
-    fullName: c.fullName ?? c.FullName,
-    phone: c.phone ?? c.Phone,
-    email: c.email ?? c.Email,
-    createdAt: c.createdAt ?? c.CreatedAt,
-  }));
-}
-
-async function createCustomer(
-  data: CustomerCreateRequestDTO
-): Promise<CustomerResponseDTO> {
-  const res = await fetch(`${API_URL}/Customer`, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json();
-    throw new Error(errorBody?.message || "Error al crear cliente");
+function normalizeDate(dateString: string): string {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    return "Sin fecha";
   }
 
-  return res.json();
+  return date.toLocaleDateString("es-SV", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-/* ================= PAGE ================= */
-
 export default function CustomerPage() {
-  const [customers, setCustomers] = useState<CustomerResponseDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [customers, setCustomers] = React.useState<CustomerResponseDTO[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState("");
+  const [modalOpen, setModalOpen] = React.useState(false);
 
-  const [page, setPage] = useState(1);
-  const pageSize = 5;
-
-  const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    loadCustomers();
+  React.useEffect(() => {
+    void loadCustomers();
   }, []);
 
   async function loadCustomers() {
     setLoading(true);
     setError(null);
-
     try {
-      const data = await fetchCustomers();
-      setCustomers(data);
+      const response = await GetAllCustomers();
+      setCustomers(response || []);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : "No se pudieron cargar los clientes");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleCreateCustomer(
-    customer: CustomerCreateRequestDTO
-  ) {
+  async function handleCreateCustomer(customer: CustomerCreateRequestDTO) {
     await createCustomer(customer);
+    toast.success("Cliente registrado correctamente");
     await loadCustomers();
   }
 
-  /* ================= RENDER ================= */
+  const filteredCustomers = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) {
+      return customers;
+    }
+
+    return customers.filter((customer) =>
+      [customer.fullName, customer.email, customer.phone]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term)),
+    );
+  }, [customers, search]);
+
+  const customersWithEmail = customers.filter((customer) => !!customer.email).length;
+  const customersWithPhone = customers.filter((customer) => !!customer.phone).length;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      {/* HEADER */}
-      <header className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Clientes</h1>
-
-        <button
-          onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-        >
-          Nuevo Cliente
-        </button>
-      </header>
-
-      {/* STATES */}
-      {loading && <p>Cargando clientes...</p>}
-      {error && (
-        <p className="text-red-600 font-medium">Error: {error}</p>
-      )}
-
-      {/* TABLE */}
-      {!loading && !error && (
-        <HeroTable<CustomerResponseDTO>
-          data={customers}
-          columns={[
-            {
-              key: "fullName",
-              label: "Nombre Completo",
-            },
-            {
-              key: "phone",
-              label: "Teléfono",
-              render: (item) =>
-                item.phone || (
-                  <span className="text-gray-400">—</span>
-                ),
-            },
-            {
-              key: "email",
-              label: "Correo",
-              render: (item) =>
-                item.email || (
-                  <span className="text-gray-400">—</span>
-                ),
-            },
-            {
-              key: "createdAt",
-              label: "Fecha Registro",
-              render: (item) =>
-                new Date(item.createdAt).toLocaleDateString(),
-            },
-          ]}
-          page={page}
-          pageSize={pageSize}
-          totalItems={customers.length}
-          onPageChange={setPage}
-          actions={(item) => (
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={() =>
-                  alert(`Ver cliente: ${item.fullName}`)
-                }
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Ver
-              </button>
-
-              <button
-                onClick={() =>
-                  alert(`Editar cliente: ${item.fullName}`)
-                }
-                className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
-              >
-                Editar
-              </button>
-
-              <button
-                onClick={() =>
-                  alert(`Eliminar cliente: ${item.fullName}`)
-                }
-                className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Eliminar
-              </button>
+    <div className="min-h-full bg-background px-4 py-5 md:px-6 xl:px-8 2xl:px-10">
+      <div className="w-full space-y-6">
+        <section className="rounded-[26px] border border-border bg-card px-5 py-6 shadow-xs md:px-7">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_460px] xl:items-end">
+            <div className="space-y-3">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                Gestión de clientes
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Clientes</h1>
+              <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
+                Mantén una vista clara del directorio de clientes con acciones uniformes y estructura profesional.
+              </p>
             </div>
-          )}
-        />
-      )}
 
-      {/* MODAL */}
-      <CreateCustomerModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onCustomerCreate={handleCreateCustomer}
-      />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-muted/50 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Total</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{customers.length}</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-muted/50 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Con correo</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{customersWithEmail}</p>
+              </div>
+              <div className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary/80">Con teléfono</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{customersWithPhone}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Card className="border-border bg-card shadow-xs">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              Directorio de clientes
+            </CardTitle>
+            <CardDescription>Búsqueda rápida, tabla responsive y botones alineados al diseño global.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="relative w-full md:max-w-sm">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar por nombre, correo o teléfono"
+                  className="pl-9"
+                />
+              </div>
+
+              <Button onClick={() => setModalOpen(true)}>
+                <UserPlus className="h-4 w-4" />
+                Nuevo cliente
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="py-8 text-sm text-muted-foreground">Cargando clientes...</div>
+            ) : null}
+
+            {error ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </div>
+            ) : null}
+
+            {!loading && !error ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Correo</TableHead>
+                    <TableHead>Teléfono</TableHead>
+                    <TableHead>Registro</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        No hay clientes para el criterio de búsqueda.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCustomers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell className="font-medium">{customer.fullName}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                            <Mail className="h-3.5 w-3.5" />
+                            {customer.email || "Sin correo"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                            <Phone className="h-3.5 w-3.5" />
+                            {customer.phone || "Sin teléfono"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{normalizeDate(customer.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" onClick={() => toast("Vista detalle pendiente")}> 
+                              <UserCheck className="h-4 w-4" />
+                              Ver
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => toast("Edición pendiente")}> 
+                              <Pencil className="h-4 w-4" />
+                              Editar
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => toast("Eliminación pendiente")}> 
+                              <Trash2 className="h-4 w-4" />
+                              Eliminar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <CreateCustomerModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onCustomerCreate={handleCreateCustomer}
+        />
+      </div>
     </div>
   );
 }

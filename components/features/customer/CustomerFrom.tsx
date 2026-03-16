@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X, UserCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CustomerCreateRequestDTO } from "@/types/custoner";
 
 interface CreateCustomerModalProps {
@@ -128,18 +131,37 @@ export function CreateCustomerModal({
      UI
      =========================== */
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPrimitive.Content className="w-full max-w-md rounded bg-white p-6 shadow-lg">
-            <DialogPrimitive.Title className="text-lg font-semibold mb-2">
-              Crear Nuevo Cliente
-            </DialogPrimitive.Title>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-md" showCloseButton={false}>
+        {/* Header degradado sidebar */}
+        <div className="bg-linear-to-r from-sky-600 to-cyan-600 px-6 pt-6 pb-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+                <UserCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold text-white leading-tight">
+                  Crear Nuevo Cliente
+                </DialogTitle>
+                <DialogDescription className="text-sky-200 text-xs mt-0.5">
+                  Completa los datos para registrar un nuevo cliente.
+                </DialogDescription>
+              </div>
+            </div>
+            <DialogClose asChild>
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
+        </div>
 
-            <DialogPrimitive.Description className="mb-4 text-sm text-gray-600">
-              Completa los datos para registrar un nuevo cliente.
-            </DialogPrimitive.Description>
+        {/* Cuerpo */}
+        <div className="p-6">
 
             {apiError && (
               <div className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -154,11 +176,10 @@ export function CreateCustomerModal({
                 <label htmlFor="fullName" className="block mb-1 font-medium">
                   Nombre Completo <span className="text-red-600">*</span>
                 </label>
-                <input
+                <Input
                   id="fullName"
                   type="text"
                   placeholder="Ej: Jeffrey"
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={formData.fullName}
                   onChange={(e) =>
                     handleInputChange("fullName", e.target.value)
@@ -174,11 +195,10 @@ export function CreateCustomerModal({
                 <label htmlFor="phone" className="block mb-1 font-medium">
                   Teléfono
                 </label>
-                <input
+                <Input
                   id="phone"
                   type="tel"
                   placeholder="+503 1234 5678"
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={formData.phone || ""}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                 />
@@ -192,11 +212,10 @@ export function CreateCustomerModal({
                 <label htmlFor="email" className="block mb-1 font-medium">
                   Correo Electrónico
                 </label>
-                <input
+                <Input
                   id="email"
                   type="email"
                   placeholder="ejemplo@correo.com"
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={formData.email || ""}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
@@ -205,27 +224,26 @@ export function CreateCustomerModal({
                 )}
               </div>
 
-              <div className="flex justify-end space-x-2">
-                <button
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isSubmitting}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                 >
                   {isSubmitting ? "Guardando..." : "Guardar Cliente"}
-                </button>
+                </Button>
               </div>
             </form>
-          </DialogPrimitive.Content>
-        </div>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+          </div>
+      </DialogContent>
+    </Dialog>
   );
 }
+

@@ -1,7 +1,7 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
 import { ReactNode } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface BaseModalProps {
   open: boolean;
@@ -17,19 +17,15 @@ export function BaseModal({
   children,
 }: BaseModalProps) {
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
-        <Dialog.Content className="fixed z-50 top-1/2 left-1/2 w-[95%] max-w-md -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6">
-          {title && (
-            <Dialog.Title className="text-xl font-semibold mb-4">
-              {title}
-            </Dialog.Title>
-          )}
-
-          {children}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[95%] max-w-md">
+        {title && (
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
+          </DialogHeader>
+        )}
+        {children}
+      </DialogContent>
+    </Dialog>
   );
 }

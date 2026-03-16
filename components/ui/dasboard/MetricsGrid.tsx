@@ -42,7 +42,7 @@ export function MetricsGrid({
       title: "Ingresos totales",
       value: currencyFormatter.format(summary?.totalRevenue ?? 0),
       icon: <TrendingUp className="h-5 w-5" />,
-      tone: "bg-indigo-100 text-indigo-700",
+      tone: "bg-sky-100 text-sky-700",
       caption: "Ventas acumuladas",
     },
     {
@@ -84,3 +84,4 @@ export function MetricsGrid({
     </section>
   );
 }
+

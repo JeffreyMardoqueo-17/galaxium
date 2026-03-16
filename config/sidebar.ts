@@ -1,9 +1,13 @@
 // config/sidebar.ts
 import {
   LayoutDashboard,
-  Users,
-  ShoppingCart,
-  Tags,
+  UserCheck,
+  ShoppingBag,
+  History,
+  Package,
+  PackagePlus,
+  LayoutGrid,
+  UserCog,
 } from "lucide-react";
 
 export type SidebarItem = {
@@ -19,33 +23,39 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Usuarios",
-    href: "/users",
-    icon: Users,
-  },
-  {
-    label: "Clientes",
-    href: "/customer",
-    icon: Users,
-  },
-  {
     label: "Ventas",
     href: "/sale",
-    icon: ShoppingCart,
+    icon: ShoppingBag,
   },
   {
-    label: "Entradas de Stock",
-    href: "/stock-entry",
-    icon: ShoppingCart,
-  },
-  {
-    label: "Categorías",
-    href: "/category",
-    icon: Tags,
+    label: "Historial de Ventas",
+    href: "/sale/history",
+    icon: History,
   },
   {
     label: "Productos",
     href: "/product",
-    icon: ShoppingCart,
-  }
+    icon: Package,
+  },
+  {
+    label: "Entradas de Stock",
+    href: "/stock-entry",
+    icon: PackagePlus,
+  },
+  {
+    label: "Categorías",
+    href: "/category",
+    icon: LayoutGrid,
+  },
+  {
+    label: "Clientes",
+    href: "/customer",
+    icon: UserCheck,
+  },
+  {
+    label: "Usuarios",
+    href: "/users",
+    icon: UserCog,
+  },
 ];
+

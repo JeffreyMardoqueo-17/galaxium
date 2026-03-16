@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, PackagePlus } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 
 import { StockEntryResponse } from "@/types/StockEntry";
 import { formatDate } from "@/utils/formatDate";
@@ -49,35 +49,38 @@ export function StockEntryDetailModal({
   if (!stockEntry) return null;
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-          <DialogPrimitive.Content
-            className="relative max-w-2xl w-full rounded-md bg-white p-6 shadow-lg focus:outline-none"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <DialogPrimitive.Title className="text-xl font-semibold">
-                  Detalles de Entrada de Stock
-                </DialogPrimitive.Title>
-                <DialogPrimitive.Description className="text-sm text-gray-600 mt-1">
-                  ID: #{stockEntry.id}
-                </DialogPrimitive.Description>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-2xl" showCloseButton={false}>
+        {/* Header degradado sidebar */}
+        <div className="bg-linear-to-r from-emerald-600 to-teal-600 px-6 pt-6 pb-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+                <PackagePlus className="h-5 w-5" />
               </div>
-              <DialogPrimitive.Close asChild>
-                <button
-                  className="rounded-full p-1 hover:bg-gray-100 transition"
-                  aria-label="Cerrar"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </DialogPrimitive.Close>
+              <div>
+                <DialogTitle className="text-lg font-bold text-white leading-tight">
+                  Detalles de Entrada de Stock
+                </DialogTitle>
+                <DialogDescription className="text-emerald-200 text-xs mt-0.5">
+                  ID: #{stockEntry.id}
+                </DialogDescription>
+              </div>
             </div>
+            <DialogClose asChild>
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
+        </div>
 
-            {/* Content */}
-            <div className="space-y-6">
+        {/* Cuerpo */}
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-4">
               {/* Información del Producto */}
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                 <h3 className="text-sm font-semibold text-blue-900 mb-3">
@@ -191,18 +194,18 @@ export function StockEntryDetailModal({
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end mt-6 pt-4 border-t">
-              <button
-                onClick={() => onOpenChange(false)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-              >
-                Cerrar
-              </button>
-            </div>
-          </DialogPrimitive.Content>
+          {/* Footer */}
+          <div className="flex justify-end mt-6 pt-4 border-t">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="px-5 py-2.5 bg-sky-600 text-white rounded-xl hover:bg-sky-700 text-sm font-semibold transition-all shadow-sm shadow-sky-600/30"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+      </DialogContent>
+    </Dialog>
   );
 }
+

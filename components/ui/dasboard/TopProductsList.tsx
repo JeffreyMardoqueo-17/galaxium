@@ -53,7 +53,7 @@ export function TopProductsList({
         {!loading &&
           topProducts?.products?.map((product) => {
             const revenueWidth = maxRevenue
-              ? Math.round((product.totalRevenue / maxRevenue) * 100)
+              ? Math.round(((product.totalRevenue ?? 0) / maxRevenue) * 100)
               : 0;
 
             return (
@@ -71,7 +71,7 @@ export function TopProductsList({
                     </p>
                   </div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {currencyFormatter.format(product.totalRevenue)}
+                    {currencyFormatter.format(product.totalRevenue ?? 0)}
                   </p>
                 </div>
                 <div className="mt-3 h-2 w-full rounded-full bg-gray-100">

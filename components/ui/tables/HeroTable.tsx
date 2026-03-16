@@ -1,6 +1,16 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Column<T> = {
   key: keyof T;
@@ -42,7 +52,7 @@ export function HeroTable<T extends { id: string | number }>({
   }, [data, page, pageSize]);
 
   return (
-    <div className="rounded-2xl shadow-sm bg-[var(--color-page)] space-y-4 border border-gray-200/70">
+    <Card className="space-y-4">
       {/* ================= MOBILE (CARDS) ================= */}
       <div className="space-y-4 md:hidden p-4">
         {paginatedData.length === 0 && (
@@ -52,9 +62,9 @@ export function HeroTable<T extends { id: string | number }>({
         )}
 
         {paginatedData.map((item) => (
-          <div
+          <Card
             key={item.id}
-            className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
+            className="border border-border/70 bg-card p-4"
           >
             {columns.map(({ key, label, render }) => (
               <div key={String(key)} className="flex justify-between gap-3">
@@ -72,17 +82,17 @@ export function HeroTable<T extends { id: string | number }>({
                 {actions(item)}
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* ================= DESKTOP (TABLE) ================= */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-full table-auto border-collapse select-none">
-          <thead>
-            <tr className="border-b bg-gray-100">
+      <CardContent className="hidden md:block overflow-x-auto px-0">
+        <Table className="min-w-full select-none">
+          <TableHeader>
+            <TableRow>
               {columns.map(({ key, label, align }) => (
-                <th
+                <TableHead
                   key={String(key)}
                   className={`p-4 text-xs font-semibold uppercase tracking-wide text-gray-800 ${
                     align === "end"
@@ -93,35 +103,35 @@ export function HeroTable<T extends { id: string | number }>({
                   }`}
                 >
                   {label}
-                </th>
+                </TableHead>
               ))}
               {actions && (
-                <th className="p-4 text-xs font-semibold uppercase tracking-wide text-center text-gray-800">
+                <TableHead className="p-4 text-xs font-semibold uppercase tracking-wide text-center text-gray-800">
                   Acciones
-                </th>
+                </TableHead>
               )}
-            </tr>
-          </thead>
+            </TableRow>
+          </TableHeader>
 
-          <tbody>
+          <TableBody>
             {paginatedData.length === 0 && (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={columns.length + (actions ? 1 : 0)}
                   className="text-center p-10 text-muted-foreground"
                 >
                   No hay datos para mostrar
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
 
             {paginatedData.map((item) => (
-              <tr
+              <TableRow
                 key={item.id}
-                className="border-b last:border-b-0 hover:bg-gray-50 transition"
+                className="last:border-b-0"
               >
                 {columns.map(({ key, render, align }) => (
-                  <td
+                  <TableCell
                     key={String(key)}
                     className={`p-4 text-sm text-shadow-gray-600 ${
                       align === "end"
@@ -132,16 +142,16 @@ export function HeroTable<T extends { id: string | number }>({
                     }`}
                   >
                     {render ? render(item) : String(item[key])}
-                  </td>
+                  </TableCell>
                 ))}
                 {actions && (
-                  <td className="p-4 text-center">{actions(item)}</td>
+                  <TableCell className="p-4 text-center">{actions(item)}</TableCell>
                 )}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </CardContent>
 
       {/* ================= PAGINATION ================= */}
       <div className="flex items-center justify-between px-4 pb-4">
@@ -150,23 +160,25 @@ export function HeroTable<T extends { id: string | number }>({
         </span>
 
         <div className="flex gap-2">
-          <button
+          <Button
             disabled={!canGoPrev}
             onClick={() => onPageChange(page - 1)}
-            className="px-3 py-1 rounded-md border text-sm disabled:opacity-40 hover:bg-gray-50"
+            variant="outline"
+            size="sm"
           >
             Anterior
-          </button>
+          </Button>
 
-          <button
+          <Button
             disabled={!canGoNext}
             onClick={() => onPageChange(page + 1)}
-            className="px-3 py-1 rounded-md border text-sm disabled:opacity-40 hover:bg-gray-50"
+            variant="outline"
+            size="sm"
           >
             Siguiente
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -3,7 +3,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { AuthServiceError, login, saveAuthSession } from "@/services/auth.service";
+import { AuthServiceError, login } from "@/services/auth.service";
 
 export function useLoginForm() {
   const router = useRouter();
@@ -27,8 +27,7 @@ export function useLoginForm() {
     inFlightRef.current = true;
 
     try {
-      const auth = await login({ username: username.trim(), password });
-      saveAuthSession(auth);
+      await login({ username: username.trim(), password });
       router.replace("/");
       router.refresh();
     } catch (err) {

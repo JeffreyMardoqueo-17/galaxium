@@ -1,6 +1,7 @@
 import { AuthResponse, UserLoginRequest } from "@/types/auth";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5213/api";
+const API_BASE_URL = () => getApiBaseUrl();
 const LOGIN_TIMEOUT_MS = 10000;
 
 export class AuthServiceError extends Error {
@@ -13,26 +14,14 @@ export class AuthServiceError extends Error {
   }
 }
 
-function setSessionCookie(accessToken: string) {
-  const secure = typeof window !== "undefined" && window.location.protocol === "https:";
-  const secureFlag = secure ? "; Secure" : "";
-
-  document.cookie = `access_token=${encodeURIComponent(accessToken)}; path=/; SameSite=Lax${secureFlag}`;
-}
-
-export function saveAuthSession(auth: AuthResponse) {
-  localStorage.setItem("access_token", auth.accessToken);
-  localStorage.setItem("user", JSON.stringify(auth.user));
-  setSessionCookie(auth.accessToken);
-}
-
 export async function login(data: UserLoginRequest): Promise<AuthResponse> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), LOGIN_TIMEOUT_MS);
 
   try {
-    const res = await fetch(`${API_BASE_URL}/User/login`, {
+    const res = await fetch(`${API_BASE_URL()}/User/login`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -72,14 +61,27 @@ export async function login(data: UserLoginRequest): Promise<AuthResponse> {
 }
 
 export function logout() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("user");
-  document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+  return fetch(`${API_BASE_URL()}/User/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function refreshSession() {
+  const res = await fetch(`${API_BASE_URL()}/User/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new AuthServiceError("No se pudo refrescar la sesión", res.status);
+  }
 }
 
 export async function forgotPassword(email: string): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/User/forgot-password`, {
+  const res = await fetch(`${API_BASE_URL()}/User/forgot-password`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
@@ -91,8 +93,9 @@ export async function resetPassword(
   code: string,
   newPassword: string
 ): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/User/reset-password`, {
+  const res = await fetch(`${API_BASE_URL()}/User/reset-password`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code, newPassword }),
   });

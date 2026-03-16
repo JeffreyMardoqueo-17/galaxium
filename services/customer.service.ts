@@ -1,13 +1,14 @@
   import { CustomerCreateRequestDTO, CustomerResponseDTO } from "@/types/custoner";
   import { getAuthHeaders } from "@/utils/getAddHeaders";
-  import { number } from "framer-motion";
+  import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
+  const API_URL = () => getApiBaseUrl();
 
   export async function GetAllCustomers(): Promise<CustomerResponseDTO[]> {
-    const res = await fetch(`${API_URL}/Customer`, {
+    const res = await fetch(`${API_URL()}/Customer`, {
       method: "GET",
       headers: getAuthHeaders(),
+    credentials: 'include',
     });
     if (!res.ok) throw new Error("Error al obtener clientes");
     return res.json();
@@ -16,19 +17,19 @@
   export async function GetByIdCustomer(
     id: number,
   ): Promise<CustomerResponseDTO> {
-    const res = await fetch(`${API_URL}/Customer/${id}`, {
+    const res = await fetch(`${API_URL()}/Customer/${id}`, {
       method: "GET",
       headers: getAuthHeaders(),
+    credentials: 'include',
     });
     if (!res.ok) throw new Error("Error al obtener cliente");
     return res.json();
 }
   export async function createCustomer(data: CustomerCreateRequestDTO) {
-  const response = await fetch("http://localhost:5213/api/Customer", {
+  const response = await fetch(`${API_URL()}/Customer`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    credentials: "include",
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 

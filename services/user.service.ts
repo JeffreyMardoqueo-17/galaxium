@@ -1,22 +1,23 @@
 import { UserResponse } from "@/types/user";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
+import { getAuthHeaders } from "@/utils/getAddHeaders";
 
-const API_URL = "http://localhost:5213/api/User";
+const API_URL = () => `${getApiBaseUrl()}/User`;
+export const UNAUTHORIZED_USER_ERROR = "UNAUTHORIZED";
 
 export async function getCurrentUser(): Promise<UserResponse> {
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    throw new Error("No autenticado");
-  }
-
-  const res = await fetch(`${API_URL}/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const res = await fetch(`${API_URL()}/me`, {
+    method: "GET",
+    credentials: "include",
+    headers: getAuthHeaders(),
   });
 
   if (!res.ok) {
-    throw new Error("No autenticado");
+    if (res.status === 401) {
+      throw new Error(UNAUTHORIZED_USER_ERROR);
+    }
+
+    throw new Error("USER_REQUEST_FAILED");
   }
 
   return res.json();

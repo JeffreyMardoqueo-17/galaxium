@@ -2,21 +2,33 @@ import {
   StockEntryCreate,
   StockEntryResponse,
 } from "@/types/StockEntry";
-import { getAuthHeaders } from "@/utils/getAddHeaders";
+import {
+  getAuthHeaders,
+  handleUnauthorizedClient,
+  UNAUTHORIZED_ERROR,
+} from "@/utils/getAddHeaders";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
+const API_URL = () => getApiBaseUrl();
 
 // ===============================
 // GET ALL STOCK ENTRIES
 // ===============================
 export async function getStockEntries(): Promise<StockEntryResponse[]> {
-  const res = await fetch(`${API_URL}/StockEntry`, {
+  const res = await fetch(`${API_URL()}/StockEntry`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
-    throw new Error("Error al obtener entradas de stock");
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
+    const errorText = await res.text().catch(() => "");
+    throw new Error(errorText?.trim() || `Error al obtener entradas de stock (HTTP ${res.status})`);
   }
 
   return res.json();
@@ -28,13 +40,20 @@ export async function getStockEntries(): Promise<StockEntryResponse[]> {
 export async function getStockEntryById(
   id: number
 ): Promise<StockEntryResponse> {
-  const res = await fetch(`${API_URL}/StockEntry/${id}`, {
+  const res = await fetch(`${API_URL()}/StockEntry/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
-    throw new Error("Error al obtener la entrada de stock");
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
+    const errorText = await res.text().catch(() => "");
+    throw new Error(errorText?.trim() || `Error al obtener la entrada de stock (HTTP ${res.status})`);
   }
 
   return res.json();
@@ -46,13 +65,19 @@ export async function getStockEntryById(
 export async function createStockEntry(
   data: StockEntryCreate
 ): Promise<StockEntryResponse> {
-  const res = await fetch(`${API_URL}/StockEntry`, {
+  const res = await fetch(`${API_URL()}/StockEntry`, {
     method: "POST",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
     // Intentar obtener detalles del error del backend
     let errorMessage = "Error al crear la entrada de stock";
     try {

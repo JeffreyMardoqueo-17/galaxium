@@ -1,688 +1,611 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { useRouter } from "next/navigation";
-import * as HoverCard from "@radix-ui/react-hover-card";
-import { AlertCircle, DollarSign, ScanLine } from "lucide-react";
-import * as Popover from "@radix-ui/react-popover";
-import { HeroTable } from "@/components/ui/tables";
-import { ProductCard } from "@/components/ui/card/product-card";
+import {
+  AlertCircle,
+  Boxes,
+  DollarSign,
+  Eye,
+  Filter,
+  LayoutGrid,
+  Pencil,
+  Plus,
+  ScanLine,
+  Table2,
+  Trash2,
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+
 import { CreateProductModal } from "@/components/features/products/ProductForm";
 import { PriceFormModal } from "@/components/features/products/PriceForm";
 import { ProductDetailModal } from "@/components/features/products/ProductVerMas";
-import {
-  ProductResponse,
+
+import { getCategories } from "@/services/category.service";
+import { createProduct, getProductsByFilter, updateProductPrice } from "@/services/product.service";
+
+import type { CategoryRead } from "@/types/category";
+import type {
   ProductCreateRequest,
   ProductFilterRequest,
-  ProductWithPhotosResponse,
+  ProductResponse,
 } from "@/types/product";
-import {
-  getProductsByFilter,
-  createProduct,
-  getProducts,
-  updateProduct,
-  updateProductPrice,
-  getProductsWithPhotos,
-} from "@/services/product.service";
-import { getCategories } from "@/services/category.service";
-import type { CategoryRead } from "@/types/category";
-//iconos
-import { IoIosCreate, IoIosColorFilter } from "react-icons/io";
-import { MdCleaningServices } from "react-icons/md";
-export default function ProductsPage() {
-  const router = useRouter();
-  
-  // ===============================
-  // STATE
-  // ===============================
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [products, setProducts] = useState<(ProductResponse | ProductWithPhotosResponse)[]>([]);
-  const [productsWithPhotos, setProductsWithPhotos] = useState<ProductWithPhotosResponse[]>([]);
-  const [categories, setCategories] = useState<CategoryRead[]>([]);
 
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+type ComboboxOption = {
+  id: string;
+  label: string;
+};
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [priceModalOpen, setPriceModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] =
-    useState<ProductResponse | null>(null);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+const money = new Intl.NumberFormat("es-SV", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+});
 
-  const [filters, setFilters] = useState<ProductFilterRequest>({
-    page: 1,
-    pageSize: 7,
-  });
+function getStockTone(product: ProductResponse): string {
+  const stock = product.stock ?? 0;
 
-  const [debouncedFilters, setDebouncedFilters] =
-    useState<ProductFilterRequest>(filters);
-
-  // ===============================
-  // HELPERS
-  // ===============================
-  function hasRealFilters(filters: ProductFilterRequest) {
-    const { page, pageSize, ...rest } = filters;
-
-    return Object.values(rest).some(
-      (v) => v !== undefined && v !== null && v !== "",
-    );
+  if (stock <= 0) {
+    return "bg-rose-100 text-rose-700 border-rose-200";
   }
 
-  // ===============================
-  // LOAD PRODUCTS
-  // ===============================
+  if (stock <= product.minimumStock) {
+    return "bg-amber-100 text-amber-700 border-amber-200";
+  }
+
+  return "bg-emerald-100 text-emerald-700 border-emerald-200";
+}
+
+export default function ProductsPage() {
+  const router = useRouter();
+
+  const [viewMode, setViewMode] = React.useState<"table" | "cards">("table");
+  const [products, setProducts] = React.useState<ProductResponse[]>([]);
+  const [categories, setCategories] = React.useState<CategoryRead[]>([]);
+
+  const [loadingProducts, setLoadingProducts] = React.useState(false);
+
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [priceModalOpen, setPriceModalOpen] = React.useState(false);
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<ProductResponse | null>(null);
+
+  const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
+
+  const [filters, setFilters] = React.useState<ProductFilterRequest>({
+    page: 1,
+    pageSize: 20,
+  });
+
+  const [debouncedFilters, setDebouncedFilters] = React.useState<ProductFilterRequest>(filters);
+
+  React.useEffect(() => {
+    void (async () => {
+      try {
+        const response = await getCategories();
+        setCategories(response || []);
+      } catch (error) {
+        console.error(error);
+        toast.error("No se pudieron cargar las categorías");
+      }
+    })();
+  }, []);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedFilters(filters), 300);
+    return () => clearTimeout(timeout);
+  }, [filters]);
+
+  React.useEffect(() => {
+    void loadProducts(debouncedFilters);
+  }, [debouncedFilters]);
+
   async function loadProducts(filter: ProductFilterRequest) {
     setLoadingProducts(true);
     try {
-      // Si estamos en vista de tarjetas, cargar con fotos (una sola vez)
-      if (viewMode === 'cards') {
-        const dataWithPhotos = await getProductsWithPhotos();
-        setProductsWithPhotos(dataWithPhotos);
-        setProducts(dataWithPhotos);
-      } else {
-        // En vista tabla, usar filtros normales
-        const data = await getProductsByFilter(filter);
-        setProducts(data);
-      }
+      const response = await getProductsByFilter(filter);
+      setProducts(response || []);
     } catch (error) {
-      console.error("Error cargando productos", error);
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "No se pudieron cargar los productos");
     } finally {
       setLoadingProducts(false);
     }
   }
 
-  // ===============================
-  // LOAD CATEGORIES
-  // ===============================
-  async function loadCategories() {
-    setLoadingCategories(true);
-    try {
-      const data = await getCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Error cargando categorías", error);
-    } finally {
-      setLoadingCategories(false);
-    }
-  }
-
-  // ===============================
-  // EFFECTS
-  // ===============================
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  // Cargar productos con fotos una sola vez cuando cambia a vista cards
-  useEffect(() => {
-    if (viewMode === 'cards' && productsWithPhotos.length === 0) {
-      (async () => {
-        setLoadingProducts(true);
-        try {
-          const dataWithPhotos = await getProductsWithPhotos();
-          setProductsWithPhotos(dataWithPhotos);
-          setProducts(dataWithPhotos);
-        } catch (error) {
-          console.error("Error cargando productos con fotos", error);
-        } finally {
-          setLoadingProducts(false);
-        }
-      })();
-    }
-  }, [viewMode, productsWithPhotos.length]);
-
-  // 🔥 Debounce
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedFilters(filters);
-    }, 400);
-
-    return () => clearTimeout(timeout);
-  }, [filters]);
-
-  useEffect(() => {
-    loadProducts(debouncedFilters);
-  }, [debouncedFilters]);
-
-  // ===============================
-  // CREATE PRODUCT
-  // ===============================
-
   async function handleProductCreate(product: ProductCreateRequest) {
     try {
-      const result = await createProduct(product);
+      const created = await createProduct(product);
       await loadProducts(debouncedFilters);
-      return typeof result === "number" ? result : result?.id;
+      return created?.id;
     } catch (error) {
-      console.error("Error creando producto:", error);
+      console.error(error);
       throw error;
     }
   }
 
-  // ===============================
-  // UPDATE PRICE
-  // ===============================
   async function handlePriceUpdate(productId: number, salePrice: number) {
-    try {
-      // Llamamos al servicio del backend
-      const updatedProduct = await updateProductPrice({
-        productId,
-        newPrice: salePrice,
-      });
-      console.log("Precio actualizado:", updatedProduct);
+    const updatedProduct = await updateProductPrice({
+      productId,
+      newPrice: salePrice,
+    });
 
-      if (updatedProduct) {
-        // Actualizamos el estado de productos en la UI
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === productId ? { ...p, ...updatedProduct } : p,
-          ),
-        );
-      }
-    } catch (err) {
-      console.error("Error actualizando precio:", err);
-      throw err; // para que el modal muestre el error
-    }
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === productId ? { ...product, ...updatedProduct } : product,
+      ),
+    );
   }
 
-  // ===============================
-  // OPEN MODALS
-  // ===============================
-  function handleOpenPriceModal(product: ProductResponse) {
-    setSelectedProduct(product);
-    setPriceModalOpen(true);
-  }
+  const categoryOptions = React.useMemo<ComboboxOption[]>(
+    () => [
+      { id: "", label: "Todas las categorías" },
+      ...categories.map((category) => ({
+        id: String(category.id),
+        label: category.name,
+      })),
+    ],
+    [categories],
+  );
 
-  function handleOpenDetailModal(product: ProductResponse) {
-    setSelectedProduct(product);
-    setDetailModalOpen(true);
-  }
+  const stateOptions: ComboboxOption[] = [
+    { id: "", label: "Todos los estados" },
+    { id: "true", label: "Solo activos" },
+    { id: "false", label: "Solo inactivos" },
+  ];
 
-  // ===============================
-  // RENDER
-  // ===============================
+  const orderByOptions: ComboboxOption[] = [
+    { id: "", label: "Sin orden específico" },
+    { id: "Name", label: "Nombre" },
+    { id: "SalePrice", label: "Precio" },
+    { id: "Stock", label: "Stock" },
+  ];
+
+  const orderDirectionOptions: ComboboxOption[] = [
+    { id: "", label: "Orden por defecto" },
+    { id: "false", label: "Ascendente" },
+    { id: "true", label: "Descendente" },
+  ];
+
+  const selectedCategory =
+    categoryOptions.find((option) => option.id === String(filters.categoryId ?? "")) ??
+    categoryOptions[0] ??
+    null;
+
+  const selectedState =
+    stateOptions.find((option) => option.id === String(filters.isActive ?? "")) ??
+    stateOptions[0] ??
+    null;
+
+  const selectedOrderBy =
+    orderByOptions.find((option) => option.id === String(filters.orderBy ?? "")) ??
+    orderByOptions[0] ??
+    null;
+
+  const selectedOrderDirection =
+    orderDirectionOptions.find((option) => option.id === String(filters.orderDescending ?? "")) ??
+    orderDirectionOptions[0] ??
+    null;
+
+  const activeCount = products.filter((product) => product.isActive).length;
+
   return (
-    <div className="space-y-6 p-2 max-w-6xl mx-auto">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Productos</h1>
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push("/product/add")}
-            className="flex items-center gap-2 px-5 py-2 bg-purple-600 text-white rounded-md cursor-pointer hover:bg-purple-700 transition"
-          >
-            <ScanLine size={20} />
-            Escanear Producto
-          </button>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700 transition"
-          >
-            <IoIosCreate size={20} />
-            Nuevo producto
-          </button>
-        </div>
-      </div>
+    <div className="min-h-full bg-background px-4 py-5 md:px-6 xl:px-8 2xl:px-10">
+      <div className="w-full space-y-6">
+        <section className="rounded-[26px] border border-border bg-card px-5 py-6 shadow-xs md:px-7">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_460px] xl:items-end">
+            <div className="space-y-3">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <Boxes className="h-3.5 w-3.5" />
+                Inventario de productos
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Catálogo de productos</h1>
+              <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
+                Gestiona existencias, precios y estados de forma clara, con filtros operativos y acciones consistentes.
+              </p>
+            </div>
 
-      {/* VIEW MODE TOGGLE */}
-      <div className="flex gap-2 p-2 bg-white rounded-md shadow-sm border border-gray-200/70">
-        <button
-          onClick={() => setViewMode('table')}
-          className={`px-4 py-2 rounded-md font-medium transition ${
-            viewMode === 'table'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Vista Tabla
-        </button>
-        <button
-          onClick={() => setViewMode('cards')}
-          className={`px-4 py-2 rounded-md font-medium transition ${
-            viewMode === 'cards'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Vista Tarjetas
-        </button>
-      </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-muted/50 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Resultados</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{products.length}</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-muted/50 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Activos</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{activeCount}</p>
+              </div>
+              <div className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary/80">Vista</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{viewMode === "table" ? "Tabla" : "Cards"}</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <div className="flex flex-wrap gap-4 p-4 rounded-md bg-white shadow-sm">
-        {/* Nombre */}
-        <input
-          placeholder="Nombre"
-          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-          value={filters.name ?? ""}
-          onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              name: e.target.value || undefined,
-              page: 1,
-            }))
-          }
-        />
+        <Card className="border-border bg-card shadow-xs">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              Filtros y acciones
+            </CardTitle>
+            <CardDescription>Controles del catálogo con diseño unificado para cualquier tema.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <Input
+                placeholder="Buscar por nombre"
+                value={filters.name ?? ""}
+                onChange={(event) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    name: event.target.value || undefined,
+                    page: 1,
+                  }))
+                }
+              />
 
-        {/* Categorías */}
-        <select
-          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-          value={filters.categoryId ?? ""}
-          onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              categoryId: e.target.value ? Number(e.target.value) : undefined,
-              page: 1,
-            }))
-          }
-        >
-          <option value="">Todas</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+              <Combobox
+                items={categoryOptions}
+                value={selectedCategory}
+                onValueChange={(option: ComboboxOption | null) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    categoryId: option?.id ? Number(option.id) : undefined,
+                    page: 1,
+                  }))
+                }
+                itemToStringLabel={(option) => option?.label ?? ""}
+                itemToStringValue={(option) => option?.id ?? ""}
+              >
+                <ComboboxInput placeholder="Categoría" showClear />
+                <ComboboxContent className="z-50">
+                  <ComboboxEmpty>Sin resultados</ComboboxEmpty>
+                  <ComboboxList>
+                    {(option: ComboboxOption) => <ComboboxItem key={option.id || "all"} value={option}>{option.label}</ComboboxItem>}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
 
-        {/* Stock mínimo */}
-        <input
-          type="number"
-          placeholder="Stock mínimo"
-          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-          value={filters.minStock ?? ""}
-          onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              minStock: e.target.value ? Number(e.target.value) : undefined,
-              page: 1,
-            }))
-          }
-        />
+              <Input
+                type="number"
+                placeholder="Stock mínimo"
+                value={filters.minStock ?? ""}
+                onChange={(event) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    minStock: event.target.value ? Number(event.target.value) : undefined,
+                    page: 1,
+                  }))
+                }
+              />
 
-        {/* Activo / Inactivo */}
-        <select
-          className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-          value={
-            filters.isActive === undefined ? "" : filters.isActive.toString()
-          }
-          onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              isActive:
-                e.target.value === "" ? undefined : e.target.value === "true",
-              page: 1,
-            }))
-          }
-        >
-          <option value="">Todos</option>
-          <option value="true">Activos</option>
-          <option value="false">Inactivos</option>
-        </select>
+              <Combobox
+                items={stateOptions}
+                value={selectedState}
+                onValueChange={(option: ComboboxOption | null) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    isActive: option?.id === "" ? undefined : option?.id === "true",
+                    page: 1,
+                  }))
+                }
+                itemToStringLabel={(option) => option?.label ?? ""}
+                itemToStringValue={(option) => option?.id ?? ""}
+              >
+                <ComboboxInput placeholder="Estado" showClear />
+                <ComboboxContent className="z-50">
+                  <ComboboxEmpty>Sin resultados</ComboboxEmpty>
+                  <ComboboxList>
+                    {(option: ComboboxOption) => <ComboboxItem key={option.id || "all-state"} value={option}>{option.label}</ComboboxItem>}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
 
-        {/* Botón filtros avanzados */}
-        <button
-          onClick={() => setShowAdvancedFilters((s) => !s)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
-        >
-          <IoIosColorFilter size={20} />
-          {showAdvancedFilters
-            ? "Ocultar filtros avanzados"
-            : "Filtros avanzados"}
-        </button>
+            {showAdvancedFilters ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <Input
+                  type="number"
+                  placeholder="Precio mínimo"
+                  value={filters.minPrice ?? ""}
+                  onChange={(event) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      minPrice: event.target.value ? Number(event.target.value) : undefined,
+                      page: 1,
+                    }))
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Precio máximo"
+                  value={filters.maxPrice ?? ""}
+                  onChange={(event) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      maxPrice: event.target.value ? Number(event.target.value) : undefined,
+                      page: 1,
+                    }))
+                  }
+                />
 
-        {/* Filtros avanzados */}
-        {showAdvancedFilters && (
-          <>
-            <input
-              type="number"
-              placeholder="Precio mínimo"
-              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-              value={filters.minPrice ?? ""}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  minPrice: e.target.value ? Number(e.target.value) : undefined,
-                  page: 1,
-                }))
-              }
-            />
+                <Combobox
+                  items={orderByOptions}
+                  value={selectedOrderBy}
+                  onValueChange={(option: ComboboxOption | null) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      orderBy: option?.id || undefined,
+                    }))
+                  }
+                  itemToStringLabel={(option) => option?.label ?? ""}
+                  itemToStringValue={(option) => option?.id ?? ""}
+                >
+                  <ComboboxInput placeholder="Ordenar por" showClear />
+                  <ComboboxContent className="z-50">
+                    <ComboboxEmpty>Sin resultados</ComboboxEmpty>
+                    <ComboboxList>
+                      {(option: ComboboxOption) => <ComboboxItem key={option.id || "order-none"} value={option}>{option.label}</ComboboxItem>}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
 
-            <input
-              type="number"
-              placeholder="Precio máximo"
-              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-              value={filters.maxPrice ?? ""}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  maxPrice: e.target.value ? Number(e.target.value) : undefined,
-                  page: 1,
-                }))
-              }
-            />
+                <Combobox
+                  items={orderDirectionOptions}
+                  value={selectedOrderDirection}
+                  onValueChange={(option: ComboboxOption | null) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      orderDescending: option?.id === "" ? undefined : option?.id === "true",
+                    }))
+                  }
+                  itemToStringLabel={(option) => option?.label ?? ""}
+                  itemToStringValue={(option) => option?.id ?? ""}
+                >
+                  <ComboboxInput placeholder="Dirección" showClear />
+                  <ComboboxContent className="z-50">
+                    <ComboboxEmpty>Sin resultados</ComboboxEmpty>
+                    <ComboboxList>
+                      {(option: ComboboxOption) => <ComboboxItem key={option.id || "direction-none"} value={option}>{option.label}</ComboboxItem>}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+            ) : null}
 
-            <select
-              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-              value={filters.orderBy ?? ""}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  orderBy: e.target.value || undefined,
-                }))
-              }
-            >
-              <option value="">Ordenar por</option>
-              <option value="Name">Nombre</option>
-              <option value="SalePrice">Precio</option>
-              <option value="Stock">Stock</option>
-            </select>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setShowAdvancedFilters((prev) => !prev)}>
+                <Filter className="h-4 w-4" />
+                {showAdvancedFilters ? "Ocultar avanzados" : "Mostrar avanzados"}
+              </Button>
 
-            <select
-              className="border px-2 py-1 rounded flex-grow min-w-[150px] max-w-[300px]"
-              value={
-                filters.orderDescending === undefined
-                  ? ""
-                  : filters.orderDescending.toString()
-              }
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  orderDescending:
-                    e.target.value === ""
-                      ? undefined
-                      : e.target.value === "true",
-                }))
-              }
-            >
-              <option value="">Orden</option>
-              <option value="false">Ascendente</option>
-              <option value="true">Descendente</option>
-            </select>
-          </>
+              <Button
+                variant="outline"
+                onClick={() => setViewMode((prev) => (prev === "table" ? "cards" : "table"))}
+              >
+                {viewMode === "table" ? <LayoutGrid className="h-4 w-4" /> : <Table2 className="h-4 w-4" />}
+                {viewMode === "table" ? "Vista tarjetas" : "Vista tabla"}
+              </Button>
+
+              <Button variant="outline" onClick={() => router.push("/product/add")}> 
+                <ScanLine className="h-4 w-4" />
+                Escanear producto
+              </Button>
+
+              <Button onClick={() => setModalOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Nuevo producto
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  setFilters({
+                    page: 1,
+                    pageSize: 20,
+                  })
+                }
+              >
+                Limpiar filtros
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {loadingProducts ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Card key={index} className="border-border bg-card">
+                <CardContent className="space-y-2 pt-6">
+                  <div className="h-4 w-2/3 rounded bg-muted" />
+                  <div className="h-3 w-1/2 rounded bg-muted" />
+                  <div className="h-3 w-1/3 rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : viewMode === "table" ? (
+          <Card className="border-border bg-card shadow-xs">
+            <CardHeader>
+              <CardTitle className="text-foreground">Listado de productos</CardTitle>
+              <CardDescription>Vista operacional con acciones de detalle y precio.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Precio</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                        No hay productos para mostrar con los filtros actuales.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    products.map((product) => {
+                      const noPrice = !product.salePrice || product.salePrice <= 0;
+                      return (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <p className="font-medium text-foreground">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">Creado por {product.createdByUserName}</p>
+                          </TableCell>
+                          <TableCell>{product.categoryName ?? "Sin categoría"}</TableCell>
+                          <TableCell>{product.sku}</TableCell>
+                          <TableCell>{product.barcode ?? "Sin código"}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${getStockTone(product)}`}>
+                              {product.stock ?? 0}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {noPrice ? (
+                              <span className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                Sin precio
+                              </span>
+                            ) : (
+                              money.format(product.salePrice ?? 0)
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={product.isActive ? "text-emerald-600" : "text-rose-600"}>
+                              {product.isActive ? "Activo" : "Inactivo"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button size="sm" variant="outline" onClick={() => { setSelectedProduct(product); setDetailModalOpen(true); }}>
+                                <Eye className="h-4 w-4" />
+                                Ver
+                              </Button>
+                              {noPrice ? (
+                                <Button size="sm" onClick={() => { setSelectedProduct(product); setPriceModalOpen(true); }}>
+                                  <DollarSign className="h-4 w-4" />
+                                  Precio
+                                </Button>
+                              ) : null}
+                              <Button size="sm" variant="outline" onClick={() => toast("Edición visual pendiente")}>
+                                <Pencil className="h-4 w-4" />
+                                Editar
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => toast("Eliminación pendiente")}>
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {products.length === 0 ? (
+              <Card className="border-border bg-card md:col-span-2 xl:col-span-3">
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  No hay productos para mostrar con los filtros actuales.
+                </CardContent>
+              </Card>
+            ) : (
+              products.map((product) => {
+                const noPrice = !product.salePrice || product.salePrice <= 0;
+                return (
+                  <Card key={product.id} className="border-border bg-card shadow-xs">
+                    <CardContent className="space-y-4 pt-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-foreground">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">{product.categoryName ?? "Sin categoría"}</p>
+                        </div>
+                        <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${getStockTone(product)}`}>
+                          Stock {product.stock ?? 0}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <p>SKU: {product.sku}</p>
+                        <p>Código: {product.barcode ?? "Sin código"}</p>
+                        <p>Precio: {noPrice ? "Sin precio" : money.format(product.salePrice ?? 0)}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedProduct(product); setDetailModalOpen(true); }}>
+                          <Eye className="h-4 w-4" />
+                          Ver
+                        </Button>
+                        {noPrice ? (
+                          <Button size="sm" onClick={() => { setSelectedProduct(product); setPriceModalOpen(true); }}>
+                            <DollarSign className="h-4 w-4" />
+                            Asignar precio
+                          </Button>
+                        ) : null}
+                        <Button size="sm" variant="outline" onClick={() => toast("Edición visual pendiente")}>
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
         )}
 
-        {/* Botón limpiar */}
-        <button
-          className="flex items-center gap-2 px-4 py-2 bg-gray-300 rounded cursor-pointer active:scale-95 transition active:bg-blue-200"
-          onClick={() =>
-            setFilters({
-              page: 1,
-              pageSize: 7,
-            })
-          }
-        >
-          <MdCleaningServices size={20} />
-          Limpiar
-        </button>
+        {modalOpen ? (
+          <CreateProductModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            categories={categories}
+            onProductCreate={handleProductCreate}
+          />
+        ) : null}
+
+        {priceModalOpen ? (
+          <PriceFormModal
+            open={priceModalOpen}
+            onOpenChange={setPriceModalOpen}
+            product={selectedProduct}
+            onPriceUpdate={handlePriceUpdate}
+          />
+        ) : null}
+
+        {detailModalOpen ? (
+          <ProductDetailModal
+            open={detailModalOpen}
+            onOpenChange={setDetailModalOpen}
+            product={selectedProduct}
+          />
+        ) : null}
       </div>
-
-      {/* LOADING VISUAL */}
-      {loadingProducts && (
-        <p className="text-sm text-gray-500">Cargando productos...</p>
-      )}
-
-      {/* CONTENT: TABLE OR CARDS */}
-      {viewMode === 'table' ? (
-        // ===== TABLA VISTA =====
-        <HeroTable
-          data={products as ProductResponse[]}
-          columns={[
-            { key: "name", label: "Nombre" },
-            { key: "barcode", label: "Código de barras" },
-
-            {
-              key: "stock",
-              label: "Stock",
-              align: "end",
-              render: (row: ProductResponse) => {
-                if (row.stock === null) {
-                  return (
-                    <span className="px-2 py-1 rounded text-gray-400 italic">
-                      Sin stock
-                    </span>
-                  );
-                }
-
-                const stock = row.stock;
-                const minStock = row.minimumStock;
-                let color = "";
-
-                if (stock === 0 || stock < minStock) {
-                  color = "text-red-600 bg-red-100";
-                } else if (stock === minStock + 1) {
-                  color = "text-orange-600 bg-orange-100";
-                } else {
-                  color = "text-green-600 bg-green-100";
-                }
-
-                return (
-                  <span className={`px-2 py-1 rounded ${color}`}>{stock}</span>
-                );
-              },
-            },
-
-            { key: "minimumStock", label: "Stock mínimo", align: "end" },
-
-            {
-              key: "salePrice",
-              label: "Precio de venta",
-              align: "end",
-              render: (item: ProductResponse) => {
-                const hasNoPrice = !item.salePrice || item.salePrice === 0;
-
-                if (!hasNoPrice) {
-                  return `$${(item.salePrice ?? 0).toFixed(2)}`;
-                }
-
-                return (
-                  <Popover.Root>
-                    <HoverCard.Root openDelay={100} closeDelay={100}>
-                      <HoverCard.Trigger asChild>
-                        <button className="flex items-center gap-1 text-red-600 hover:text-red-700 font-medium group">
-                          <AlertCircle className="w-5 h-5 cursor-pointer" />
-                          <span className="text-sm">Sin precio</span>
-                        </button>
-                      </HoverCard.Trigger>
-
-                      <HoverCard.Content
-                        side="top"
-                        align="center"
-                        className="
-                        bg-red-50 
-                        border 
-                        shadow-lg 
-                        rounded-lg 
-                        px-3 py-2 
-                        text-sm 
-                        text-red-700
-                        animate-in fade-in zoom-in-95
-                      "
-                      >
-                        Este producto aún no tiene precio asignado.
-                      </HoverCard.Content>
-                    </HoverCard.Root>
-                    <Popover.Portal>
-                      <Popover.Content
-                        className="z-50 w-72 rounded-lg border border-red-300 bg-red-50 p-4 shadow-lg"
-                        sideOffset={5}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-2">
-                            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-red-900 mb-1">
-                                Producto sin precio de venta
-                              </p>
-                              <p className="text-xs text-red-700">
-                                Este producto no puede estar activo hasta que se
-                                asigne un precio de venta.
-                              </p>
-                            </div>
-                          </div>
-                          <div className="pt-2 border-t border-red-200">
-                            <p className="text-xs text-red-800 mb-2 font-medium">
-                              ¿Deseas asignar el precio ahora?
-                            </p>
-                            <button
-                              onClick={() => handleOpenPriceModal(item)}
-                              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition text-sm font-medium"
-                            >
-                              <DollarSign className="w-4 h-4" />
-                              Asignar Precio
-                            </button>
-                          </div>
-                        </div>
-                        <Popover.Arrow className="fill-red-300" />
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
-                );
-              },
-            },
-
-            {
-              key: "isActive",
-              label: "Activo",
-              render: (item: ProductResponse) => {
-                const isInactive = !item.isActive;
-
-                // ===== Motivo =====
-                let reason = "Producto inactivo.";
-
-                const noStock = !item.stock || item.stock === 0;
-                const noPrice = !item.salePrice || item.salePrice === 0;
-
-                if (noStock && noPrice) {
-                  reason = "No está activo porque no tiene stock ni precio.";
-                } else if (noStock) {
-                  reason = "No está activo porque no hay stock disponible.";
-                } else if (noPrice) {
-                  reason = "No está activo porque no tiene precio asignado.";
-                }
-
-                const badge = (
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      item.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {item.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                );
-
-                // Activo → sin hover
-                if (!isInactive) return badge;
-
-                // Inactivo → con hover
-                return (
-                  <HoverCard.Root openDelay={150} closeDelay={200}>
-                    <HoverCard.Trigger asChild>{badge}</HoverCard.Trigger>
-
-                    <HoverCard.Content
-                      side="top"
-                      align="center"
-                      className="
-              bg-white border border-gray-200
-              shadow-xl rounded-xl
-              px-3 py-2
-              text-sm text-gray-700
-              max-w-xs
-              animate-in fade-in zoom-in-95
-            "
-                    >
-                      {reason}
-                    </HoverCard.Content>
-                  </HoverCard.Root>
-                );
-              },
-            },
-
-            { key: "categoryName", label: "Categoría" },
-          ]}
-          actions={(item) => (
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={() => handleOpenDetailModal(item as ProductResponse)}
-                className="bg-blue-500 px-3 py-1 text-white rounded-md hover:bg-blue-600"
-              >
-                Ver
-              </button>
-              {(!item.salePrice || item.salePrice === 0) && (
-                <button
-                  onClick={() => handleOpenPriceModal(item as ProductResponse)}
-                  className="bg-green-500 px-3 py-1 text-white rounded-md hover:bg-green-600 flex items-center gap-1"
-                >
-                  <DollarSign className="w-4 h-4" />
-                  Precio
-                </button>
-              )}
-              <button className="bg-yellow-500 px-3 py-1 text-white rounded-md hover:bg-yellow-600">
-                Editar
-              </button>
-              <button className="bg-red-500 px-3 py-1 text-white rounded-md hover:bg-red-600">
-                Eliminar
-              </button>
-            </div>
-          )}
-          page={filters.page ?? 1}
-          pageSize={filters.pageSize ?? 7}
-          totalItems={products.length}
-          onPageChange={(page) =>
-            setFilters((f) => ({
-              ...f,
-              page,
-            }))
-          }
-        />
-      ) : (
-        // ===== TARJETAS VISTA =====
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-gray-500">
-              <p>No hay productos para mostrar</p>
-            </div>
-          ) : (
-            (products as ProductWithPhotosResponse[]).map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onPhotoUpdate={(productId) => {
-                  // Recargar datos con fotos si es necesario
-                  console.log('Foto actualizada para:', productId);
-                }}
-              />
-            ))
-          )}
-        </div>
-      )}
-
-      {modalOpen && (
-        <CreateProductModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          categories={categories}
-          onProductCreate={handleProductCreate}
-        />
-      )}
-
-      {priceModalOpen && (
-        <PriceFormModal
-          open={priceModalOpen}
-          onOpenChange={setPriceModalOpen}
-          product={selectedProduct}
-          onPriceUpdate={handlePriceUpdate}
-        />
-      )}
-
-      {detailModalOpen && (
-        <ProductDetailModal
-          open={detailModalOpen}
-          onOpenChange={setDetailModalOpen}
-          product={selectedProduct}
-        />
-      )}
     </div>
   );
 }

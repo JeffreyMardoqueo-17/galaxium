@@ -3,17 +3,18 @@ import {
   StockEntryResponse,
 } from "@/types/StockEntry";
 import { getAuthHeaders } from "@/utils/getAddHeaders";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
+const API_URL = () => getApiBaseUrl();
 
 /* ============================
    GET ALL
 ============================ */
 export async function GetAllStockEntries(): Promise<StockEntryResponse[]> {
-  const res = await fetch(`${API_URL}/StockEntry`, {
+  const res = await fetch(`${API_URL()}/StockEntry`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) throw new Error("Error al obtener entradas de stock");
@@ -27,9 +28,10 @@ export async function GetAllStockEntries(): Promise<StockEntryResponse[]> {
 export async function GetByIdStockEntry(
   id: number
 ): Promise<StockEntryResponse> {
-  const res = await fetch(`${API_URL}/StockEntry/${id}`, {
+  const res = await fetch(`${API_URL()}/StockEntry/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) throw new Error("Error al obtener la entrada de stock");
@@ -43,9 +45,10 @@ export async function GetByIdStockEntry(
 export async function CreateStockEntry(
   data: StockEntryCreate
 ): Promise<StockEntryResponse> {
-  const response = await fetch(`${API_URL}/StockEntry`, {
+  const response = await fetch(`${API_URL()}/StockEntry`, {
     method: "POST",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 

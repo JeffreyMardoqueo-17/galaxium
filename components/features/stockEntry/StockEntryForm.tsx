@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Plus, Barcode, X } from "lucide-react";
 
@@ -156,44 +156,49 @@ export function CreateStockEntryModal({
   }
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Trigger asChild>
-        <button className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-          <Plus className="mr-2 w-4 h-4" /> Nueva Entrada de Stock
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 active:bg-emerald-800 shadow-sm shadow-emerald-600/30 font-semibold text-sm transition-all duration-150">
+          <Plus className="w-4 h-4" /> Nueva Entrada de Stock
         </button>
-      </DialogPrimitive.Trigger>
+      </DialogTrigger>
 
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <DialogPrimitive.Content
-            className="relative w-full max-w-6xl rounded-xl bg-white p-8 shadow-2xl focus:outline-none my-8"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <DialogPrimitive.Title className="text-2xl font-bold text-gray-900">
-                📦 Registrar Entrada de Stock
-              </DialogPrimitive.Title>
-              <DialogPrimitive.Close asChild>
-                <button className="text-gray-500 hover:text-gray-700">
-                  <X className="w-5 h-5" />
-                </button>
-              </DialogPrimitive.Close>
+      <DialogContent className="p-0 gap-0 overflow-hidden sm:max-w-5xl" showCloseButton={false}>
+            <div className="bg-linear-to-r from-emerald-600 to-teal-600 px-6 pt-6 pb-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white">
+                    <Plus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg font-bold text-white leading-tight">
+                      Registrar Entrada de Stock
+                    </DialogTitle>
+                    <DialogDescription className="text-emerald-100 text-xs mt-0.5">
+                      Actualiza el inventario y costo de tus productos
+                    </DialogDescription>
+                  </div>
+                </div>
+                <DialogClose asChild>
+                  <button className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </DialogClose>
+              </div>
             </div>
-            <DialogPrimitive.Description className="mb-6 text-sm text-gray-600">
-              Actualiza el inventario y costo de tus productos
-            </DialogPrimitive.Description>
+            <div className="p-6">
 
             {/* ESCÁNER */}
             {showScanner && (
-              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+              <div className="mb-5 p-4 bg-sky-50 border-2 border-sky-200 rounded-xl">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-blue-900">Escanear Código de Barras</h3>
+                  <h3 className="font-semibold text-sky-800 text-sm">Escanear Código de Barras</h3>
                   <button
                     type="button"
                     onClick={() => setShowScanner(false)}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="text-sky-400 hover:text-sky-700 transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
                 <BarcodeScanner
@@ -203,7 +208,7 @@ export function CreateStockEntryModal({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* PRODUCTO - Input Searchable con CANTIDAD y COSTO */}
               <div>
                 <label className="block mb-2 font-semibold text-gray-700">
@@ -253,7 +258,7 @@ export function CreateStockEntryModal({
                               key={prod.id}
                               type="button"
                               onClick={() => handleSelectProduct(prod.id)}
-                              className="w-full text-left px-4 py-3 hover:bg-purple-50 border-b last:border-b-0 transition flex justify-between items-center"
+                              className="w-full text-left px-4 py-3 hover:bg-sky-50 border-b last:border-b-0 transition flex justify-between items-center"
                             >
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -268,9 +273,9 @@ export function CreateStockEntryModal({
                                   SKU: {prod.sku || 'N/A'} | Código: {prod.barcode || 'N/A'}
                                 </p>
                               </div>
-                              <span className="text-sm font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded">
-                                Stock: {prod.stock ?? 0}
-                              </span>
+                              <span className="text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded font-semibold">
+                                  Stock: {prod.stock ?? 0}
+                                </span>
                             </button>
                           ))
                         ) : (
@@ -282,20 +287,19 @@ export function CreateStockEntryModal({
                     )}
                   </div>
 
-                  {/* Cantidad */}
                   <div className="col-span-1.5">
                     <input
                       type="number"
                       min="1"
                       placeholder="Cantidad"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all text-sm"
                       value={formData.quantity || ""}
                       onChange={(e) =>
                         handleInputChange("quantity", parseInt(e.target.value) || 0)
                       }
                     />
                     {errors.quantity && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">{errors.quantity}</p>
+                      <p className="mt-1 text-xs text-red-500 font-medium">{errors.quantity}</p>
                     )}
                   </div>
 
@@ -306,14 +310,14 @@ export function CreateStockEntryModal({
                       min="0"
                       step="0.01"
                       placeholder="Costo Unitario"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all text-sm"
                       value={formData.unitCost || ""}
                       onChange={(e) =>
                         handleInputChange("unitCost", parseFloat(e.target.value) || 0)
                       }
                     />
                     {errors.unitCost && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">{errors.unitCost}</p>
+                      <p className="mt-1 text-xs text-red-500 font-medium">{errors.unitCost}</p>
                     )}
                   </div>
 
@@ -321,7 +325,7 @@ export function CreateStockEntryModal({
                   <button
                     type="button"
                     onClick={() => setShowScanner(!showScanner)}
-                    className="col-span-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium h-full"
+                    className="col-span-1 flex items-center justify-center gap-2 px-4 py-3 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition font-semibold h-full shadow-sm shadow-sky-600/30 text-sm"
                     title="Escanear código de barras"
                   >
                     <Barcode className="w-5 h-5" />
@@ -367,9 +371,9 @@ export function CreateStockEntryModal({
               {/* Costo Total + Tipo de Movimiento + Referencia */}
               <div className="grid grid-cols-3 gap-3">
                 {/* Costo Total (solo lectura) */}
-                <div className="rounded-lg border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3">
-                  <p className="text-xs font-semibold text-purple-700 uppercase">Costo Total</p>
-                  <p className="text-2xl font-bold text-purple-900">
+                <div className="rounded-xl border-2 border-emerald-200 bg-linear-to-br from-emerald-50 to-teal-50 px-4 py-3">
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Costo Total</p>
+                  <p className="text-2xl font-bold text-emerald-900">
                     ${totalCost.toFixed(2)}
                   </p>
                 </div>
@@ -385,7 +389,7 @@ export function CreateStockEntryModal({
                   >
                     <SelectPrimitive.Trigger
                       id="referenceType"
-                      className="inline-flex items-center justify-between w-full rounded-lg border-2 border-gray-300 px-3 py-2.5 text-left text-sm text-gray-700 hover:border-purple-300 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
+                      className="inline-flex items-center justify-between w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-3 py-2.5 text-left text-sm text-gray-700 hover:border-sky-300 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all"
                       aria-label="Selecciona un tipo de movimiento"
                     >
                       <SelectPrimitive.Value />
@@ -408,33 +412,26 @@ export function CreateStockEntryModal({
 
                     <SelectPrimitive.Content
                       sideOffset={5}
-                      className="overflow-hidden rounded-md border-2 border-gray-300 bg-white shadow-lg z-50"
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl z-60"
                     >
-                      <SelectPrimitive.ScrollUpButton />
-                      <SelectPrimitive.Viewport>
+                      <SelectPrimitive.Viewport className="p-1">
                         <SelectPrimitive.Item
                           value={StockReferenceType.Purchase.toString()}
-                          className="relative flex cursor-pointer select-none items-center rounded-md px-8 py-2.5 text-sm text-gray-700 data-[highlighted]:bg-purple-600 data-[highlighted]:text-white transition"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-gray-700 data-highlighted:bg-sky-600 data-highlighted:text-white outline-none transition-colors"
                         >
-                          <SelectPrimitive.ItemText>
-                            📥 Compra
-                          </SelectPrimitive.ItemText>
+                          <SelectPrimitive.ItemText>📥 Compra</SelectPrimitive.ItemText>
                         </SelectPrimitive.Item>
                         <SelectPrimitive.Item
                           value={StockReferenceType.Sale.toString()}
-                          className="relative flex cursor-pointer select-none items-center rounded-md px-8 py-2.5 text-sm text-gray-700 data-[highlighted]:bg-purple-600 data-[highlighted]:text-white transition"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-gray-700 data-highlighted:bg-sky-600 data-highlighted:text-white outline-none transition-colors"
                         >
-                          <SelectPrimitive.ItemText>
-                            📤 Venta
-                          </SelectPrimitive.ItemText>
+                          <SelectPrimitive.ItemText>📤 Venta</SelectPrimitive.ItemText>
                         </SelectPrimitive.Item>
                         <SelectPrimitive.Item
                           value={StockReferenceType.Adjustment.toString()}
-                          className="relative flex cursor-pointer select-none items-center rounded-md px-8 py-2.5 text-sm text-gray-700 data-[highlighted]:bg-purple-600 data-[highlighted]:text-white transition"
+                          className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-gray-700 data-highlighted:bg-sky-600 data-highlighted:text-white outline-none transition-colors"
                         >
-                          <SelectPrimitive.ItemText>
-                            ⚙️ Ajuste
-                          </SelectPrimitive.ItemText>
+                          <SelectPrimitive.ItemText>⚙️ Ajuste</SelectPrimitive.ItemText>
                         </SelectPrimitive.Item>
                       </SelectPrimitive.Viewport>
                       <SelectPrimitive.ScrollDownButton />
@@ -455,7 +452,7 @@ export function CreateStockEntryModal({
                     type="number"
                     min="0"
                     placeholder="Número factura"
-                    className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition text-sm"
+                    className="w-full px-3 py-2.5 border-2 border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all text-sm"
                     value={formData.referenceId || ""}
                     onChange={(e) =>
                       handleInputChange(
@@ -468,19 +465,19 @@ export function CreateStockEntryModal({
               </div>
 
               {/* Botones de acción */}
-              <div className="flex justify-end gap-3 pt-3 border-t-2 border-gray-200">
+              <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => onOpenChange(false)}
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition font-medium disabled:opacity-50 text-sm"
+                  className="px-6 py-2.5 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold disabled:opacity-50 text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold disabled:opacity-50 flex items-center gap-2 text-sm"
+                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold disabled:opacity-50 flex items-center gap-2 text-sm shadow-sm shadow-emerald-600/30"
                 >
                   {isSubmitting ? (
                     <>
@@ -495,9 +492,9 @@ export function CreateStockEntryModal({
                 </button>
               </div>
             </form>
-          </DialogPrimitive.Content>
-        </div>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+          </div>
+      </DialogContent>
+    </Dialog>
   );
 }
+
