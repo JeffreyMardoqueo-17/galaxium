@@ -1,83 +1,67 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/services/auth.service";
+import LoginErrorAlert from "@/components/features/auth/LoginErrorAlert";
+import LoginForm from "@/components/features/auth/LoginForm";
+import LoginHeader from "@/components/features/auth/LoginHeader";
+import ForgotPasswordForm from "@/components/features/auth/ForgotPasswordForm";
+import { useLoginForm } from "@/hooks/useLoginForm";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const [showForgot, setShowForgot] = useState(false);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setError(null);
-  setLoading(true);
-
-  try {
-    const result = await login({ username, password });
-
-    // aqui fuardo el  tokens
-    localStorage.setItem("access_token", result.accessToken);
-    localStorage.setItem("user", JSON.stringify(result.user));
-
-    // cookie SOLO para middlewarea
-    document.cookie = `access_token=1; path=/`;
-
-    router.push("/");
-  } catch {
-    setError("Usuario o contraseña incorrectos");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    error,
+    loading,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg"
-      >
-        <h1 className="mb-6 text-center text-2xl font-bold text-black">
-          Galaxium ERP
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-blue-50 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10">
+          {showForgot ? (
+            <ForgotPasswordForm onBack={() => setShowForgot(false)} />
+          ) : (
+            <>
+              <LoginHeader />
 
-        {error && (
-          <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+              {error && <LoginErrorAlert message={error} />}
 
-        <input
-          type="text"
-          placeholder="Usuario"
-          className="mb-3 w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+              <LoginForm
+                username={username}
+                password={password}
+                showPassword={showPassword}
+                loading={loading}
+                onUsernameChange={setUsername}
+                onPasswordChange={setPassword}
+                onTogglePassword={() => setShowPassword((value) => !value)}
+                onSubmit={handleSubmit}
+              />
 
-        <input
-          type="password"
-          placeholder="Contraseña"
-          className="mb-4 w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgot(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Ingresando..." : "Iniciar sesión"}
-        </button>
-      </form>
+        <p className="text-center text-gray-500 text-xs mt-8 px-4">
+          © 2024 Galaxium ERP. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   );
 }

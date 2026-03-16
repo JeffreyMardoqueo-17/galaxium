@@ -163,7 +163,7 @@ export default function BarcodeScanner({
           <button
             type="button"
             onClick={startScanner}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white rounded-lg font-medium transition"
           >
             <Camera className="w-4 h-4" />
             Activar Cámara
@@ -188,7 +188,7 @@ export default function BarcodeScanner({
       </div>
 
       {/* SCANNER */}
-      <div className="relative rounded-xl overflow-hidden border-4 border-purple-500 shadow-xl">
+      <div className="relative rounded-xl overflow-hidden border-2 border-blue-950 shadow-xl">
         {isActive ? (
           <div
             id="barcode-qr-reader"
@@ -201,8 +201,8 @@ export default function BarcodeScanner({
         ) : (
           <div className="w-full h-[400px] flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <div className="text-center">
-              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Camera className="w-10 h-10 text-purple-600" />
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Camera className="w-10 h-10 text-blue-900" />
               </div>
               <p className="text-gray-700 font-semibold text-lg">
                 Presiona para escanear

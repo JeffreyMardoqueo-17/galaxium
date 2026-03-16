@@ -2,14 +2,15 @@
 
 import {
   SaleCreateDto,
+  SaleHistoryResponseDto,
   SaleResponseDto,
 } from "../types/sale";
 
 import { getAuthHeaders } from "../utils/getAddHeaders";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
-const BASE_URL = `${API_URL}/Sale`;
+const BASE_URL = () => `${getApiBaseUrl()}/Sale`;
 
 // ==========================================
 // CREATE SALE
@@ -35,9 +36,10 @@ const BASE_URL = `${API_URL}/Sale`;
 export async function createSale(
   sale: SaleCreateDto
 ): Promise<SaleResponseDto> {
-  const response = await fetch(BASE_URL, {
+  const response = await fetch(BASE_URL(), {
     method: "POST",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(sale),
   });
 
@@ -56,9 +58,10 @@ export async function createSale(
 export async function getSaleById(
   saleId: number
 ): Promise<SaleResponseDto> {
-  const response = await fetch(`${BASE_URL}/${saleId}`, {
+  const response = await fetch(`${BASE_URL()}/${saleId}`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -74,9 +77,10 @@ export async function getSaleById(
 // GET: api/Sale
 // ==========================================
 export async function getAllSales(): Promise<SaleResponseDto[]> {
-  const response = await fetch(BASE_URL, {
+  const response = await fetch(BASE_URL(), {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -96,10 +100,11 @@ export async function getSalesByDateRange(
   end: string
 ): Promise<SaleResponseDto[]> {
   const response = await fetch(
-    `${BASE_URL}/ByDateRange?start=${start}&end=${end}`,
+    `${BASE_URL()}/ByDateRange?start=${start}&end=${end}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
+    credentials: 'include',
     }
   );
 
@@ -119,10 +124,11 @@ export async function getSalesByCustomer(
   customerId: number
 ): Promise<SaleResponseDto[]> {
   const response = await fetch(
-    `${BASE_URL}/ByCustomer/${customerId}`,
+    `${BASE_URL()}/ByCustomer/${customerId}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
+    credentials: 'include',
     }
   );
 
@@ -132,4 +138,84 @@ export async function getSalesByCustomer(
   }
 
   return response.json();
+}
+
+export async function getSalesHistory(
+  startDate?: string,
+  endDate?: string
+): Promise<SaleHistoryResponseDto> {
+  const params = new URLSearchParams();
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
+
+  const response = await fetch(
+    `${BASE_URL()}/History${params.toString() ? `?${params.toString()}` : ""}`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
+  return response.json();
+}
+
+export async function downloadInvoicePdf(saleId: number): Promise<Blob> {
+  const response = await fetch(`${BASE_URL()}/${saleId}/InvoicePdf`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
+  return response.blob();
+}
+
+export async function downloadSalesReportPdf(
+  startDate?: string,
+  endDate?: string
+): Promise<Blob> {
+  const params = new URLSearchParams();
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
+
+  const response = await fetch(
+    `${BASE_URL()}/ReportPdf${params.toString() ? `?${params.toString()}` : ""}`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
+  return response.blob();
+}
+
+export async function downloadDailyInvoicesPdf(date: string): Promise<Blob> {
+  const response = await fetch(`${BASE_URL()}/DailyInvoicesPdf?date=${date}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
+  return response.blob();
 }

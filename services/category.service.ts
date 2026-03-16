@@ -1,36 +1,40 @@
 import { CategoryRead, CategoryRequest } from "@/types/category";
+import { getAuthHeaders } from "@/utils/getAddHeaders";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("access_token");
-  if (!token) throw new Error("No autenticado");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
+const API_URL = () => getApiBaseUrl();
 
 export async function getCategories(): Promise<CategoryRead[]> {
-  const res = await fetch(`${API_URL}/ProductCategory`, {
+  const res = await fetch(`${API_URL()}/ProductCategory`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
-    throw new Error("Error al obtener categorías");
+    if (res.status === 401) {
+      throw new Error("Sesion expirada. Inicia sesion nuevamente.");
     }
-    console.log("Respuesta de getCategories:", res);
+
+    const errorText = await res.text().catch(() => "");
+    throw new Error(errorText?.trim() || `Error al obtener categorias (HTTP ${res.status})`);
+  }
+
   return res.json();
 }
 
 export async function getCategoriesById(id: number): Promise<CategoryRead> {
-  const res = await fetch(`${API_URL}/ProductCategory/${id}`, {
+  const res = await fetch(`${API_URL()}/ProductCategory/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Sesion expirada. Inicia sesion nuevamente.");
+    }
+
     throw new Error("Error al obtener categoría");
   }
 
@@ -38,13 +42,18 @@ export async function getCategoriesById(id: number): Promise<CategoryRead> {
 }
 
 export async function createCategory(data: CategoryRequest): Promise<CategoryRead> {
-  const res = await fetch(`${API_URL}/ProductCategory`, {
+  const res = await fetch(`${API_URL()}/ProductCategory`, {
     method: "POST",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Sesion expirada. Inicia sesion nuevamente.");
+    }
+
     throw new Error("Error al crear categoría");
   }
 

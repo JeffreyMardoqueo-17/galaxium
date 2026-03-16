@@ -73,3 +73,36 @@ export interface SaleResponseDto {
   createdAt: string;   // DateTime → string ISO
   details: SaleDetailResponseDto[];
 }
+
+export interface SaleHistorySummaryDto {
+  totalSales: number;
+  totalProductsSold: number;
+  totalSubTotal: number;
+  totalDiscount: number;
+  totalRevenue: number;
+  totalAmountPaid: number;
+  totalChangeDelivered: number;
+  averageTicket: number;
+}
+
+export interface SaleHistoryItemDto {
+  id: number;
+  invoiceNumber: string;
+  saleDate: string;
+  customerName: string;
+  sellerName: string;
+  paymentMethod: string;
+  productsSold: number;
+  subTotal: number;
+  discount: number;
+  total: number;
+  amountPaid: number;
+  changeAmount: number;
+}
+
+export interface SaleHistoryResponseDto {
+  startDate: string;
+  endDate: string;
+  summary: SaleHistorySummaryDto;
+  sales: SaleHistoryItemDto[];
+}

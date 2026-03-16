@@ -1,6 +1,16 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Column<T> = {
   key: keyof T;
@@ -42,7 +52,7 @@ export function HeroTable<T extends { id: string | number }>({
   }, [data, page, pageSize]);
 
   return (
-    <div className="rounded-xl shadow-sm bg-(--color-page) space-y-4">
+    <Card className="space-y-4">
       {/* ================= MOBILE (CARDS) ================= */}
       <div className="space-y-4 md:hidden p-4">
         {paginatedData.length === 0 && (
@@ -52,39 +62,39 @@ export function HeroTable<T extends { id: string | number }>({
         )}
 
         {paginatedData.map((item) => (
-          <div
+          <Card
             key={item.id}
-            className="border rounded-lg p-4 space-y-2 bg-background shadow-sm"
+            className="border border-border/70 bg-card p-4"
           >
             {columns.map(({ key, label, render }) => (
-              <div key={String(key)} className="flex justify-between gap-2">
-                <span className="text-sm font-semibold text-muted-foreground">
+              <div key={String(key)} className="flex justify-between gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   {label}
                 </span>
-                <span className="text-sm text-right">
+                <span className="text-sm text-right text-gray-900">
                   {render ? render(item) : String(item[key])}
                 </span>
               </div>
             ))}
 
             {actions && (
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-3 flex justify-end gap-2">
                 {actions(item)}
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* ================= DESKTOP (TABLE) ================= */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-150table-auto border-collapse select-none">
-          <thead>
-            <tr className="border-b bg-muted/50 bg-gray-100 ">
+      <CardContent className="hidden md:block overflow-x-auto px-0">
+        <Table className="min-w-full select-none">
+          <TableHeader>
+            <TableRow>
               {columns.map(({ key, label, align }) => (
-                <th
+                <TableHead
                   key={String(key)}
-                  className={`p-4 text-sm font-medium ${
+                  className={`p-4 text-xs font-semibold uppercase tracking-wide text-gray-800 ${
                     align === "end"
                       ? "text-right"
                       : align === "center"
@@ -93,37 +103,37 @@ export function HeroTable<T extends { id: string | number }>({
                   }`}
                 >
                   {label}
-                </th>
+                </TableHead>
               ))}
               {actions && (
-                <th className="p-4 text-sm font-medium text-center">
+                <TableHead className="p-4 text-xs font-semibold uppercase tracking-wide text-center text-gray-800">
                   Acciones
-                </th>
+                </TableHead>
               )}
-            </tr>
-          </thead>
+            </TableRow>
+          </TableHeader>
 
-          <tbody>
+          <TableBody>
             {paginatedData.length === 0 && (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className="text-center p-8 text-muted-foreground"
+                  className="text-center p-10 text-muted-foreground"
                 >
                   No hay datos para mostrar
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
 
             {paginatedData.map((item) => (
-              <tr
+              <TableRow
                 key={item.id}
-                className=" last:border-b-0 hover:bg-muted/20 transition"
+                className="last:border-b-0"
               >
                 {columns.map(({ key, render, align }) => (
-                  <td
+                  <TableCell
                     key={String(key)}
-                    className={`p-4 text-sm ${
+                    className={`p-4 text-sm text-shadow-gray-600 ${
                       align === "end"
                         ? "text-right"
                         : align === "center"
@@ -132,16 +142,16 @@ export function HeroTable<T extends { id: string | number }>({
                     }`}
                   >
                     {render ? render(item) : String(item[key])}
-                  </td>
+                  </TableCell>
                 ))}
                 {actions && (
-                  <td className="p-4 text-center">{actions(item)}</td>
+                  <TableCell className="p-4 text-center">{actions(item)}</TableCell>
                 )}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </CardContent>
 
       {/* ================= PAGINATION ================= */}
       <div className="flex items-center justify-between px-4 pb-4">
@@ -150,23 +160,25 @@ export function HeroTable<T extends { id: string | number }>({
         </span>
 
         <div className="flex gap-2">
-          <button
+          <Button
             disabled={!canGoPrev}
             onClick={() => onPageChange(page - 1)}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
+            variant="outline"
+            size="sm"
           >
             Anterior
-          </button>
+          </Button>
 
-          <button
+          <Button
             disabled={!canGoNext}
             onClick={() => onPageChange(page + 1)}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
+            variant="outline"
+            size="sm"
           >
             Siguiente
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

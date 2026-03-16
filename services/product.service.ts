@@ -4,19 +4,14 @@ import {
   ProductResponse,
   ProductFilterRequest,
   ProductUpdatePriceRequest,
+  ProductWithPhotosResponse,
 } from "@/types/product";
+import { getAuthHeaders, handleUnauthorizedClient, UNAUTHORIZED_ERROR } from "@/utils/getAddHeaders";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5213/api";
+const API_URL = () => getApiBaseUrl();
 
-function getAuthHeaders() {
-  const token = localStorage.getItem("access_token");
-  if (!token) throw new Error("No autenticado");
 
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 // ===============================
 // GET ALL PRODUCTS (ACTIVE ONLY)
@@ -26,15 +21,27 @@ export async function getProducts(): Promise<ProductResponse[]> {
 }
 
 // ===============================
+// GET ALL PRODUCTS (ACTIVE + INACTIVE)
+// ===============================
+export async function getAllProducts(): Promise<ProductResponse[]> {
+  return getProductsByFilter({ pageSize: 1000 });
+}
+
+// ===============================
 // GET PRODUCT BY ID
 // ===============================
 export async function getProductById(id: number): Promise<ProductResponse> {
-  const res = await fetch(`${API_URL}/Product/${id}`, {
+  const res = await fetch(`${API_URL()}/Product/${id}`, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
     throw new Error("Error al obtener el producto");
   }
 
@@ -47,13 +54,18 @@ export async function getProductById(id: number): Promise<ProductResponse> {
 export async function createProduct(
   data: ProductCreateRequest,
 ): Promise<ProductResponse> {
-  const res = await fetch(`${API_URL}/Product`, {
+  const res = await fetch(`${API_URL()}/Product`, {
     method: "POST",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
     throw new Error("Error al crear el producto");
   }
 
@@ -67,13 +79,18 @@ export async function updateProduct(
   id: number,
   data: ProductUpdateRequest,
 ): Promise<ProductResponse> {
-  const res = await fetch(`${API_URL}/Product/${id}`, {
+  const res = await fetch(`${API_URL()}/Product/${id}`, {
     method: "PUT",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
     throw new Error("Error al actualizar el producto");
   }
 
@@ -106,15 +123,24 @@ export async function getProductsByFilter(
     }
   });
 
-  const url = `${API_URL}/Product/filter?${queryParams.toString()}`;
+  const url = `${API_URL()}/Product/filter?${queryParams.toString()}`;
 
   const res = await fetch(url, {
     method: "GET",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
 
   if (!res.ok) {
-    throw new Error("Error al obtener productos filtrados");
+    const errorText = await res.text().catch(() => "");
+    const message =
+      errorText?.trim() ||
+      `Error al obtener productos filtrados (HTTP ${res.status})`;
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+    throw new Error(message);
   }
 
   return res.json();
@@ -126,15 +152,38 @@ export async function getProductsByFilter(
 export async function updateProductPrice(
   data: ProductUpdatePriceRequest,
 ): Promise<ProductResponse> {
-  const res = await fetch(`${API_URL}/Product/price`, {
+  const res = await fetch(`${API_URL()}/Product/price`, {
     method: "PATCH",
     headers: getAuthHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
     const errorText = await res.text();
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
     throw new Error(errorText || "Error al actualizar el precio del producto");
+  }
+
+  return res.json();
+}
+
+export async function getProductsWithPhotos(): Promise<ProductWithPhotosResponse[]> {
+  const res = await fetch(`${API_URL()}/Product/with-photos`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorizedClient();
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+    throw new Error("Error al obtener productos con fotos");
   }
 
   return res.json();

@@ -6,8 +6,8 @@
         // {
 
 export interface ProductPhoto {
-    productId: number;
-    file: File;
+    id?: number;
+    photoUrl?: string;
+    file?: File;
     isPrimary: boolean; 
-    
 }
