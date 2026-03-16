@@ -39,7 +39,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Galaxium POS" size="lg">
               <Link href="/" prefetch={false} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-lg shadow-sky-900/35">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
                   <Store className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col leading-tight">
@@ -84,7 +84,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                         <div
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-150 ${
                             isActive
-                              ? "bg-sky-500 text-white shadow-sm shadow-sky-900/35"
+                              ? "border border-sidebar-border bg-sidebar-accent text-sidebar-foreground"
                               : "bg-sidebar-foreground/10 text-sidebar-foreground/60 group-hover:bg-sidebar-foreground/18 group-hover:text-sidebar-foreground/90"
                           }`}
                         >
@@ -100,7 +100,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                           {item.label}
                         </span>
                         {isActive && (
-                          <ChevronRight className="ml-auto h-3.5 w-3.5 text-sky-300/70" />
+                          <ChevronRight className="ml-auto h-3.5 w-3.5 text-sidebar-foreground/65" />
                         )}
                       </Link>
                     </SidebarMenuButton>
@@ -120,7 +120,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
               className="cursor-default h-auto py-2 px-3 hover:bg-transparent rounded-xl"
               tooltip={user?.username ?? "Usuario"}
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-300 text-xs font-bold border border-sky-500/30">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent text-sidebar-foreground text-xs font-bold">
                 {initials}
               </div>
               <div className="flex flex-col leading-tight min-w-0 ml-1">

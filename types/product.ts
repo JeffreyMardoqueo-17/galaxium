@@ -7,6 +7,7 @@ import { ProductPhoto } from "./product-photo";
 export interface ProductCreateRequest {
   categoryId: number;
   name: string;
+  unitOfMeasure: string;
   barcode?: string;
   costPrice: number | null;
   salePrice: number | null;
@@ -21,8 +22,11 @@ export interface ProductCreateRequest {
 export interface ProductUpdateRequest {
   categoryId: number;
   name: string;
-  salePrice: number;
+  costPrice?: number | null;
+  salePrice?: number | null;
   minimumStock: number;
+  unitOfMeasure: string;
+  barcode?: string;
   isActive: boolean;
 }
 
@@ -38,6 +42,7 @@ export interface ProductResponse {
   salePrice: number | null;
   stock: number | null;
   minimumStock: number;
+  unitOfMeasure: string;
   isActive: boolean;
   createdAt: string; // ISO string
 
@@ -91,6 +96,7 @@ export interface ProductWithPhotosResponse {
   salePrice: number | null;
   stock: number | null;
   minimumStock: number;
+  unitOfMeasure: string;
 
   isActive: boolean;
   createdAt: string;

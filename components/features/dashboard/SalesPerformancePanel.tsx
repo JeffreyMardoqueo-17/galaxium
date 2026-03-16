@@ -21,6 +21,7 @@ type Props = {
   analytics: DashboardSalesAnalytics;
   currencyFormatter: Intl.NumberFormat;
   numberFormatter: Intl.NumberFormat;
+  compact?: boolean;
 };
 
 const chartConfig = {
@@ -43,7 +44,7 @@ function getSeriesByRange(
   return analytics.dailySeries;
 }
 
-export function SalesPerformancePanel({ analytics, currencyFormatter, numberFormatter }: Props) {
+export function SalesPerformancePanel({ analytics, currencyFormatter, numberFormatter, compact = false }: Props) {
   const [range, setRange] = React.useState<RangeType>("day");
 
   const series = React.useMemo(() => getSeriesByRange(analytics, range), [analytics, range]);
@@ -57,7 +58,7 @@ export function SalesPerformancePanel({ analytics, currencyFormatter, numberForm
 
   return (
     <Card className="border-border/70 bg-card/90 shadow-sm">
-      <CardHeader className="space-y-4">
+      <CardHeader className={compact ? "space-y-3 pb-3" : "space-y-4"}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <CardTitle className="text-xl">Rendimiento de ventas</CardTitle>
@@ -114,9 +115,9 @@ export function SalesPerformancePanel({ analytics, currencyFormatter, numberForm
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className={compact ? "space-y-3" : "space-y-4"}>
         <div className="rounded-xl border bg-muted/15 p-2">
-        <ChartContainer config={chartConfig} className="h-80 w-full">
+        <ChartContainer config={chartConfig} className={compact ? "h-64 w-full" : "h-80 w-full"}>
           <BarChart
             accessibilityLayer
             data={series}
@@ -160,7 +161,7 @@ export function SalesPerformancePanel({ analytics, currencyFormatter, numberForm
         </ChartContainer>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className={compact ? "grid gap-2 sm:grid-cols-3" : "grid gap-3 lg:grid-cols-3"}>
           <div className="rounded-lg border bg-card/60 p-3">
             <p className="text-xs text-muted-foreground">Dia mas fuerte</p>
             <p className="mt-1 flex items-center gap-2 text-sm font-semibold">

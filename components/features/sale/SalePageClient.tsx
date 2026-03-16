@@ -214,16 +214,43 @@ export default function SalePageClient({
   }
 
   async function handleCreateCustomer() {
-    if (!newCustomer.name.trim()) {
+    const fullName = newCustomer.name.trim();
+    const phone = newCustomer.phone.trim();
+    const email = newCustomer.email.trim();
+
+    if (!fullName) {
       toast.error("El nombre del cliente es obligatorio");
       return;
     }
+
+    if (!phone) {
+      toast.error("El teléfono del cliente es obligatorio para enviar factura");
+      return;
+    }
+
+    if (!email) {
+      toast.error("El correo del cliente es obligatorio para enviar factura");
+      return;
+    }
+
+    const phoneRegex = /^[+()0-9\s-]{8,20}$/;
+    if (!phoneRegex.test(phone)) {
+      toast.error("Ingresa un teléfono válido");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Ingresa un correo electrónico válido");
+      return;
+    }
+
     setIsCreatingCustomer(true);
     try {
       const dto: CustomerCreateRequestDTO = {
-        fullName: newCustomer.name.trim(),
-        phone: newCustomer.phone.trim() || null,
-        email: newCustomer.email.trim() || null,
+        fullName,
+        phone,
+        email,
       };
       const created: CustomerResponseDTO = await createCustomer(dto);
       setCustomers((prev) => [...prev, created]);
@@ -286,7 +313,6 @@ export default function SalePageClient({
   }
 
   const handleBarcodeDetected = (code: string) => {
-    setShowScanner(false);
     const product = products.find((p) => p.barcode?.toLowerCase() === code.toLowerCase());
     if (product) addToCart(product);
     else toast.error(`Código "${code}" no encontrado`);
@@ -497,7 +523,7 @@ export default function SalePageClient({
                         </div>
                       </div>
                     ) : (
-                      <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
                         {(filteredProducts || []).slice(0, 12).map((product) => {
                           const stock = product.stock ?? 0;
                           const inCart = cart.find((c) => c.productId === product.id);
@@ -507,26 +533,29 @@ export default function SalePageClient({
                               key={product.id}
                               onClick={() => addProduct(product.id)}
                               disabled={atLimit}
-                              className="group rounded-2xl border border-border bg-card p-4 text-left transition enabled:hover:border-primary/40 enabled:hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="group h-full min-h-36 rounded-2xl border border-border bg-card p-4 text-left transition enabled:hover:border-primary/40 enabled:hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-1">
-                                  <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.name}</p>
-                                  <p className="text-xs text-muted-foreground">{product.categoryName || "Sin categoría"}</p>
+                              <div className="flex h-full flex-col justify-between gap-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="space-y-1">
+                                    <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.name}</p>
+                                    <p className="text-xs text-muted-foreground">{product.categoryName || "Sin categoría"}</p>
+                                  </div>
+                                  <span className="shrink-0 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
+                                    {fmt.format(product.salePrice ?? 0)}
+                                  </span>
                                 </div>
-                                <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-                                  {fmt.format(product.salePrice ?? 0)}
-                                </span>
-                              </div>
-                              <div className="mt-4 flex items-center justify-between text-xs">
-                                <span className={
-                                  stock === 0 ? "font-medium text-destructive"
-                                  : stock <= 3 ? "font-medium text-amber-600"
-                                  : "text-muted-foreground"
-                                }>
-                                  Stock {stock}
-                                </span>
-                                <span className="truncate text-muted-foreground">{product.barcode || "Sin código"}</span>
+
+                                <div className="flex items-end justify-between gap-3 text-xs">
+                                  <span className={
+                                    stock === 0 ? "font-medium text-destructive"
+                                    : stock <= 3 ? "font-medium text-amber-600"
+                                    : "text-muted-foreground"
+                                  }>
+                                    Stock {stock}
+                                  </span>
+                                  <span className="max-w-28 truncate text-muted-foreground">{product.barcode || "Sin código"}</span>
+                                </div>
                               </div>
                             </button>
                           );
@@ -757,26 +786,30 @@ export default function SalePageClient({
                     {showNewCustomerForm && (
                       <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
                         <p className="text-xs font-semibold text-foreground">Nuevo cliente</p>
+                        <p className="text-xs text-muted-foreground">Teléfono y correo son obligatorios para el envío de factura.</p>
                         <input
                           type="text"
                           placeholder="Nombre completo *"
                           className="h-10 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
                           value={newCustomer.name}
                           onChange={(e) => setNewCustomer((p) => ({ ...p, name: e.target.value }))}
+                          required
                         />
                         <input
                           type="tel"
-                          placeholder="Teléfono (opcional)"
+                          placeholder="Teléfono *"
                           className="h-10 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
                           value={newCustomer.phone}
                           onChange={(e) => setNewCustomer((p) => ({ ...p, phone: e.target.value }))}
+                          required
                         />
                         <input
                           type="email"
-                          placeholder="Correo electrónico (opcional)"
+                          placeholder="Correo electrónico *"
                           className="h-10 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
                           value={newCustomer.email}
                           onChange={(e) => setNewCustomer((p) => ({ ...p, email: e.target.value }))}
+                          required
                         />
                         <div className="flex gap-2">
                           <Button size="sm" className="flex-1 rounded-lg" onClick={handleCreateCustomer} disabled={isCreatingCustomer}>

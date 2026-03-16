@@ -45,7 +45,8 @@ export default function BarcodeScanner({
   const [cameraError, setCameraError] = React.useState("");
 
   const scannerRef = React.useRef<Html5Qrcode | null>(null);
-  const hasDetectedRef = React.useRef(false);
+  const lastDetectedCodeRef = React.useRef("");
+  const lastDetectedAtRef = React.useRef(0);
 
   // ===============================
   // STOP SCANNER
@@ -61,7 +62,8 @@ export default function BarcodeScanner({
       }
     }
     scannerRef.current = null;
-    hasDetectedRef.current = false;
+    lastDetectedCodeRef.current = "";
+    lastDetectedAtRef.current = 0;
     setIsActive(false);
     setCameraError("");
   }, []);
@@ -73,7 +75,8 @@ export default function BarcodeScanner({
     console.log("[BARCODE] Iniciando scanner...");
     setIsActive(true);
     setCameraError("");
-    hasDetectedRef.current = false;
+    lastDetectedCodeRef.current = "";
+    lastDetectedAtRef.current = 0;
 
     setTimeout(async () => {
       try {
@@ -107,18 +110,24 @@ export default function BarcodeScanner({
           config,
           (decodedText) => {
             console.log("[BARCODE] ✓✓✓ CÓDIGO DETECTADO:", decodedText);
-            
-            if (hasDetectedRef.current) return;
-            hasDetectedRef.current = true;
 
-            setLastScannedCode(decodedText);
-            // alert(`✓ Código escaneado:\n${decodedText}`);
+            const normalizedCode = decodedText.trim();
+            if (!normalizedCode) return;
+
+            const now = Date.now();
+            const isSameCode = normalizedCode === lastDetectedCodeRef.current;
+            const isInCooldown = now - lastDetectedAtRef.current < 1200;
+
+            if (isSameCode && isInCooldown) {
+              return;
+            }
+
+            lastDetectedCodeRef.current = normalizedCode;
+            lastDetectedAtRef.current = now;
+
+            setLastScannedCode(normalizedCode);
             playBeep();
-            onDetected(decodedText);
-
-            setTimeout(() => {
-              stopScanner();
-            }, 500);
+            onDetected(normalizedCode);
           },
           () => {
             // Ignorar errores de "no encontrado"
@@ -139,7 +148,7 @@ export default function BarcodeScanner({
         if (onError) onError(errorMsg);
       }
     }, 100);
-  }, [onDetected, onError, stopScanner]);
+  }, [onDetected, onError]);
 
   // ===============================
   // CLEANUP
@@ -199,7 +208,7 @@ export default function BarcodeScanner({
             }}
           />
         ) : (
-          <div className="w-full h-[400px] flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+          <div className="w-full h-100 flex items-center justify-center bg-linear-to-br from-gray-100 to-gray-200">
             <div className="text-center">
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Camera className="w-10 h-10 text-blue-900" />

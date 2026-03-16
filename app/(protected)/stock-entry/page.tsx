@@ -53,6 +53,8 @@ function getReferenceTypeLabel(type: string): string {
       return "Venta";
     case "Adjustment":
       return "Ajuste";
+    case "Return":
+      return "Devolución";
     default:
       return type || "Desconocido";
   }
@@ -66,6 +68,8 @@ function getReferenceTypeTone(type: string): string {
       return "bg-rose-100 text-rose-700 border-rose-200";
     case "Adjustment":
       return "bg-amber-100 text-amber-700 border-amber-200";
+    case "Return":
+      return "bg-sky-100 text-sky-700 border-sky-200";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
@@ -188,6 +192,7 @@ export default function StockEntryPage() {
     { id: "Purchase", label: "Compras" },
     { id: "Sale", label: "Ventas" },
     { id: "Adjustment", label: "Ajustes" },
+    { id: "Return", label: "Devoluciones" },
   ];
 
   const selectedTypeOption =

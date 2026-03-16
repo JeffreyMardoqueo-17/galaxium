@@ -12,6 +12,31 @@ import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
 const BASE_URL = () => `${getApiBaseUrl()}/Sale`;
 
+async function extractApiError(response: Response): Promise<string> {
+  const fallback = `Error ${response.status} al procesar la solicitud`;
+
+  try {
+    const data = await response.clone().json();
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message.trim();
+    }
+
+    if (typeof data?.title === "string" && data.title.trim()) {
+      return data.title.trim();
+    }
+
+    if (typeof data?.detail === "string" && data.detail.trim()) {
+      return data.detail.trim();
+    }
+  } catch {
+    // Si no es JSON, intentamos texto plano.
+  }
+
+  const text = (await response.text()).trim();
+  return text || fallback;
+}
+
 // ==========================================
 // CREATE SALE
 // ======================================================
@@ -44,7 +69,7 @@ export async function createSale(
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 

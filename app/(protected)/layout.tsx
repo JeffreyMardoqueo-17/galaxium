@@ -31,9 +31,6 @@ export default function ProtectedLayout({
 
     async function loadUser() {
       try {
-        // Intento preventivo: renueva cookie de acceso si hay refresh vigente.
-        await refreshSession().catch(() => null);
-
         const currentUser = await getCurrentUser();
         if (!isActive) return;
         setUser(currentUser);
@@ -90,8 +87,8 @@ export default function ProtectedLayout({
       <TooltipProvider delayDuration={150}>
         <SidebarProvider>
           <AppSidebar user={user} onLogout={handleLogout} />
-          <SidebarInset className="bg-(--color-body)">
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-4 md:px-6 bg-(--color-page) shadow-sm">
+          <SidebarInset className="">
+            <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-4 md:px-6 shadow-sm">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="-ml-1" />
                 <div className="hidden sm:flex items-center gap-2">
@@ -117,7 +114,7 @@ export default function ProtectedLayout({
                 {isSessionReady ? (
                   children
                 ) : (
-                  <div className="flex h-full min-h-[220px] items-center justify-center p-4">
+                  <div className="flex h-full min-h-55 items-center justify-center p-4">
                     <div className="text-sm text-muted-foreground">Validando sesión...</div>
                   </div>
                 )}

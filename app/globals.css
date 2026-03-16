@@ -11,7 +11,7 @@
   --color-body: #f8f8fa;
   --color-page: #ffffff;
 
-  --color-sidebar: #273363;
+  --color-sidebar: #0b0b0a;
   --color-sidebar-hover: #6f799b;
 
   --color-text-title: #2d2d2c;
@@ -49,7 +49,7 @@
   --chart-4: oklch(0.6 0.16 235);
   --chart-5: oklch(0.53 0.14 238);
   --radius: 0.625rem;
-  --sidebar: oklch(0.152 0.025 250);
+  --sidebar: #000000;
   --sidebar-foreground: oklch(0.88 0.015 240);
   --sidebar-primary: oklch(0.64 0.17 242);
   --sidebar-primary-foreground: oklch(1 0 0);
@@ -66,7 +66,7 @@
   --color-body: #040a1c;          /* Fondo principal más oscuro */
   --color-page: #0a162f;          /* Fondo contenido un poco más claro */
 
-  --color-sidebar: #040a1c;       /* Sidebar igual al fondo más oscuro */
+  --color-sidebar: #0b0b0a;       /* Sidebar alineado al tono solicitado */
   --color-sidebar-hover: #28304f; /* Hover sidebar suave */
 
   --color-text-title: #d1d7e0;
@@ -124,7 +124,7 @@
 
   --chart-5: oklch(0.48 0.13 238);
 
-  --sidebar: oklch(0.108 0.020 245);
+  --sidebar: #000000;
 
   --sidebar-foreground: oklch(0.85 0.017 238);
 

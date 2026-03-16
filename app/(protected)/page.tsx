@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, LayoutDashboard, ShoppingCart, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, LayoutDashboard, ShoppingCart, Sparkles, Wallet } from "lucide-react";
 
 import {
   DashboardKpiGrid,
   DashboardRefreshButton,
-  ProfitSummaryCard,
   SalesPerformancePanel,
   TopProductsTable,
 } from "@/components/features/dashboard";
@@ -69,18 +68,21 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-full">
-        <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:py-8 space-y-6">
-          <Skeleton className="h-24 w-full rounded-2xl" />
+        <main className="mx-auto w-full max-w-420 px-3 py-4 md:px-4 lg:py-5 xl:px-5 2xl:px-6 space-y-4">
+          <Skeleton className="h-20 w-full rounded-2xl" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
+              <Skeleton key={i} className="h-26 rounded-xl" />
             ))}
           </div>
-          <Skeleton className="h-[420px] w-full rounded-xl" />
-          <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-            <Skeleton className="h-72 rounded-xl" />
-            <Skeleton className="h-72 rounded-xl" />
+          <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+            <Skeleton className="h-130 rounded-xl" />
+            <div className="grid gap-4">
+              <Skeleton className="h-40 rounded-xl" />
+              <Skeleton className="h-90 rounded-xl" />
+            </div>
           </div>
+          <Skeleton className="h-72 w-full rounded-xl" />
         </main>
       </div>
     );
@@ -108,8 +110,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-background">
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:py-8 space-y-6">
-        <section className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+      <main className="mx-auto w-full max-w-420 px-3 py-4 md:px-4 lg:py-5 xl:px-5 2xl:px-6 space-y-4">
+        <section className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-xl border bg-background/95 p-2.5 shadow-xs">
@@ -120,19 +122,19 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">
                   Monitorea ventas, utilidad y comportamiento comercial en tiempo real.
                 </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full border bg-background/75 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                     Operacion diaria
                   </span>
                   <span className="inline-flex items-center rounded-full border bg-background/75 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                    Vista gerencial
+                    Vista General
                   </span>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button asChild size="lg" className="h-11 px-6 text-base font-semibold shadow-sm">
+              <Button asChild size="lg" className="h-10 px-5 text-sm font-semibold shadow-sm">
                 <Link href="/sale">
                   <ShoppingCart className="h-4 w-4" />
                   Realizar venta
@@ -154,22 +156,81 @@ export default function DashboardPage() {
           numberFormatter={numberFormatter}
         />
 
-        <SalesPerformancePanel
-          analytics={salesAnalytics}
-          currencyFormatter={currencyFormatter}
-          numberFormatter={numberFormatter}
-        />
-
-        <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <TopProductsTable
-            topProducts={topProducts}
+        <section className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+          <SalesPerformancePanel
+            analytics={salesAnalytics}
             currencyFormatter={currencyFormatter}
             numberFormatter={numberFormatter}
+            compact
           />
-          <ProfitSummaryCard
-            summary={summary}
-            currencyFormatter={currencyFormatter}
-          />
+
+          <div className="grid gap-4">
+            <Card className="border-border/70 bg-card/90 shadow-sm">
+              <CardHeader className="space-y-1 pb-3">
+                <CardTitle className="text-base">Resumen diario</CardTitle>
+                <p className="text-xs text-muted-foreground">Indicadores clave de la operación actual</p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/25 p-2.5">
+                  <span className="text-sm text-muted-foreground">Ventas del dia</span>
+                  <span className="font-semibold text-foreground">{numberFormatter.format(summary.todaySales)}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/25 p-2.5">
+                  <span className="text-sm text-muted-foreground">Facturacion del dia</span>
+                  <span className="font-semibold text-foreground">{currencyFormatter.format(summary.todayRevenue)}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/25 p-2.5">
+                  <span className="text-sm text-muted-foreground">Productos agotados</span>
+                  <span className="font-semibold text-foreground">{numberFormatter.format(summary.exhaustedProducts)}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/7 p-2.5">
+                  <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    Utilidad neta
+                  </span>
+                  <span className="font-bold text-primary">{currencyFormatter.format(summary.netProfit)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <TopProductsTable
+              topProducts={topProducts}
+              currencyFormatter={currencyFormatter}
+              numberFormatter={numberFormatter}
+            />
+          </div>
+        </section>
+
+        <section>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Últimas ventas</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-muted-foreground">
+                    <tr>
+                      <th className="py-2">Factura</th>
+                      <th className="py-2">Fecha</th>
+                      <th className="py-2">Vendedor</th>
+                      <th className="py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.recentSales.map((sale) => (
+                      <tr key={sale.saleId} className="border-t">
+                        <td className="py-2">{sale.invoiceNumber || "N/A"}</td>
+                        <td className="py-2">{new Date(sale.saleDate).toLocaleString()}</td>
+                        <td className="py-2">{sale.sellerName}</td>
+                        <td className="py-2">{currencyFormatter.format(sale.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </main>
     </div>

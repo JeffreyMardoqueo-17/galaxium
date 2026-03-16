@@ -8,6 +8,18 @@ export interface DashboardSummary {
   totalInvestment: number;
   totalStock: number;
   netProfit: number;
+  todaySales: number;
+  todayRevenue: number;
+  exhaustedProducts: number;
+  recentSales: DashboardRecentSale[];
+}
+
+export interface DashboardRecentSale {
+  saleId: number;
+  invoiceNumber: string;
+  saleDate: string;
+  total: number;
+  sellerName: string;
 }
 
 // ===============================
