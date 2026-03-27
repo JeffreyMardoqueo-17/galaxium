@@ -12,6 +12,7 @@ import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useConfirmationSound } from "@/hooks/useConfirmationSound";
 
 import { ProductResponse } from "@/types/product";
 import { CustomerCreateRequestDTO, CustomerResponseDTO } from "@/types/custoner";
@@ -56,6 +57,7 @@ export default function SalePageClient({
   initialPaymentMethods,
   initialCategories,
 }: SalePageClientProps) {
+  const { prime: primeConfirmationSound, play: playConfirmationSound } = useConfirmationSound();
   const [products] = React.useState<ProductResponse[]>(initialProducts);
   const [customers, setCustomers] = React.useState<CustomerResponseDTO[]>(initialCustomers);
   const [paymentMethods] = React.useState<PaymentMethodResponse[]>(initialPaymentMethods);
@@ -346,6 +348,7 @@ export default function SalePageClient({
   const changeAmount = amountPaid > total ? amountPaid - total : 0;
 
   async function handleSubmit() {
+    primeConfirmationSound();
     if (!cart.length) { toast.error("Agrega al menos un producto al carrito"); return; }
     if (!paymentMethodId) { toast.error("Selecciona un método de pago"); return; }
 
@@ -360,6 +363,7 @@ export default function SalePageClient({
     setIsSubmitting(true);
     try {
       await createSale(dto);
+      playConfirmationSound();
       toast.success("¡Venta registrada correctamente!");
       setCart([]);
       setBarcodeInput("");
@@ -388,7 +392,7 @@ export default function SalePageClient({
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Registrar venta</h1>
                 <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
-                  Opera la caja con una distribución amplia, lectura clara y acciones rápidas para registrar ventas sin saturación visual.
+                
                 </p>
               </div>
             </div>

@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-background">
-      <main className="mx-auto w-full max-w-420 px-3 py-4 md:px-4 lg:py-5 xl:px-5 2xl:px-6 space-y-4">
+      <main className="mx-auto w-full  px-3 py-4 md:px-4 lg:py-5 xl:px-5 2xl:px-6 space-y-4">
         <section className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
@@ -118,9 +118,9 @@ export default function DashboardPage() {
                 <LayoutDashboard className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold">Dashboard ejecutivo</h1>
+                <h1 className="text-2xl font-semibold">Vista general</h1>
                 <p className="text-sm text-muted-foreground">
-                  Monitorea ventas, utilidad y comportamiento comercial en tiempo real.
+                  Monitoreo de ventas, utilidad y comportamiento comercial
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full border bg-background/75 px-2.5 py-1 text-xs font-medium text-muted-foreground">

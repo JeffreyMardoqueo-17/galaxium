@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { showToast } from "@/components/ui/modales/Toast";
+import { useConfirmationSound } from "@/hooks/useConfirmationSound";
 import { createPurchase, getPurchases } from "@/services/purchase.service";
 import { getAllProducts } from "@/services/product.service";
 import { getSuppliers } from "@/services/supplier.service";
@@ -53,6 +54,7 @@ function getPurchaseTone(status: string): string {
 
 export default function PurchasePage() {
   const router = useRouter();
+  const { prime: primeConfirmationSound, play: playConfirmationSound } = useConfirmationSound();
 
   const [suppliers, setSuppliers] = React.useState<SupplierResponse[]>([]);
   const [products, setProducts] = React.useState<ProductResponse[]>([]);
@@ -111,6 +113,8 @@ export default function PurchasePage() {
   }, [load]);
 
   async function handleCreatePurchase() {
+    primeConfirmationSound();
+
     if (!supplierId || !productId || quantity <= 0 || unitPrice <= 0) {
       showToast({
         title: "Datos incompletos",
@@ -127,6 +131,7 @@ export default function PurchasePage() {
         supplierId,
         details: [{ productId, quantity, unitPrice }],
       });
+      playConfirmationSound();
 
       showToast({
         title: "Compra registrada",
@@ -217,17 +222,17 @@ export default function PurchasePage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-muted/50 px-4 py-4">
+              <div className="rounded-2xl border border-border dark:bg-neutral-800 px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Compras</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">{purchases.length}</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-300">{purchases.length}</p>
               </div>
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Invertido</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">{money.format(totalSpent)}</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-900">{money.format(totalSpent)}</p>
               </div>
               <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">Ticket promedio</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">{money.format(averageTicket)}</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-900">{money.format(averageTicket)}</p>
               </div>
             </div>
           </div>

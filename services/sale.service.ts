@@ -90,7 +90,7 @@ export async function getSaleById(
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -109,7 +109,7 @@ export async function getAllSales(): Promise<SaleResponseDto[]> {
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -134,7 +134,7 @@ export async function getSalesByDateRange(
   );
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -158,7 +158,7 @@ export async function getSalesByCustomer(
   );
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -183,7 +183,7 @@ export async function getSalesHistory(
   );
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -198,7 +198,7 @@ export async function downloadInvoicePdf(saleId: number): Promise<Blob> {
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -223,7 +223,7 @@ export async function downloadSalesReportPdf(
   );
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
@@ -238,7 +238,7 @@ export async function downloadDailyInvoicesPdf(date: string): Promise<Blob> {
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    const error = await extractApiError(response);
     throw new Error(error);
   }
 
