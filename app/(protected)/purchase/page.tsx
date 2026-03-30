@@ -393,9 +393,16 @@ export default function PurchasePage() {
                       </TableCell>
                       <TableCell>{purchase.supplierName}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Boxes className="h-4 w-4" />
-                          {purchase.details.length} linea{purchase.details.length === 1 ? "" : "s"}
+                        <div className="flex flex-col gap-1">
+                          {purchase.details.slice(0, 2).map((detail, idx) => (
+                            <div key={detail.id} className="flex items-center gap-2 text-sm">
+                              <Boxes className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate max-w-[180px]">{detail.productName}</span>
+                            </div>
+                          ))}
+                          {purchase.details.length > 2 && (
+                            <span className="text-xs text-muted-foreground">+{purchase.details.length - 2} mas</span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-foreground">{money.format(purchase.total)}</TableCell>

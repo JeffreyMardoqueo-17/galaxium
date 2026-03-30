@@ -34,6 +34,7 @@ export interface SaleCreateDto {
   paymentMethodId: number;
   discount: number;
   amountPaid?: number | null;  // Cantidad pagada por el cliente (solo para efectivo)
+  isDiscountPercentage?: boolean;  // true = porcentaje, false = monto fijo
   details: SaleDetailCreateDto[];
 }
 

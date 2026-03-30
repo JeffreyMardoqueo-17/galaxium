@@ -29,7 +29,7 @@ import {
   getSalesHistory,
 } from "@/services/sale.service";
 import { SaleHistoryItemDto, SaleHistoryResponseDto } from "@/types/sale";
-import { formatDate } from "@/utils/formatDate";
+import { formatDate, toLocalInputDate } from "@/utils/formatDate";
 
 const money = new Intl.NumberFormat("es-SV", {
   style: "currency",
@@ -38,7 +38,7 @@ const money = new Intl.NumberFormat("es-SV", {
 });
 
 function toInputDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
+  return toLocalInputDate(value);
 }
 
 function todayInputDate(): string {

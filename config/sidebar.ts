@@ -45,12 +45,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: Package,
     allowedRoles: ["Administrador", "Supervisor", "Encargado de inventario"],
   },
-  {
-    label: "Entradas de Stock",
-    href: "/stock-entry",
-    icon: PackagePlus,
-    allowedRoles: ["Administrador", "Supervisor", "Encargado de inventario"],
-  },
+  
   {
     label: "Proveedores",
     href: "/supplier",

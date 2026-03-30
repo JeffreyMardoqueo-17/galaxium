@@ -17,7 +17,7 @@ import {
   SalesByDayItem,
   SalesByProductItem,
 } from "@/types/report";
-import { formatDate } from "@/utils/formatDate";
+import { formatCalendarDate, formatDate } from "@/utils/formatDate";
 import { isUnauthorizedError } from "@/utils/getAddHeaders";
 
 type LoadResult<T> = {
@@ -265,7 +265,7 @@ export default function ReportsPage() {
               Mejor dia
             </p>
             <p className="mt-3 text-lg font-semibold text-foreground">
-              {topRevenueDay ? `${new Date(topRevenueDay.date).toLocaleDateString()} · ${money.format(topRevenueDay.totalAmount)}` : "Sin datos"}
+              {topRevenueDay ? `${formatCalendarDate(topRevenueDay.date)} · ${money.format(topRevenueDay.totalAmount)}` : "Sin datos"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-xs">
@@ -298,7 +298,7 @@ export default function ReportsPage() {
                   <TableBody>
                     {salesByDay.map((item) => (
                       <TableRow key={item.date}>
-                        <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatCalendarDate(item.date)}</TableCell>
                         <TableCell>{item.transactions}</TableCell>
                         <TableCell className="font-medium text-foreground">{money.format(item.totalAmount)}</TableCell>
                       </TableRow>
@@ -436,7 +436,9 @@ export default function ReportsPage() {
         ) : null}
 
         {!loading && salesByDay.length > 0 ? (
-          <p className="text-xs text-muted-foreground">Ultima lectura consolidada: {formatDate(salesByDay[0]?.date ?? new Date().toISOString())}</p>
+          <p className="text-xs text-muted-foreground">
+            Ultima lectura consolidada: {salesByDay[0]?.date ? formatCalendarDate(salesByDay[0].date) : formatDate(new Date())}
+          </p>
         ) : null}
       </div>
     </div>

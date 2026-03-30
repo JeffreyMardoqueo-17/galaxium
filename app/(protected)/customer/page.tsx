@@ -12,19 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CreateCustomerModal } from "@/components/features/customer/CustomerFrom";
 import { createCustomer, GetAllCustomers } from "@/services/customer.service";
 import { CustomerCreateRequestDTO, CustomerResponseDTO } from "@/types/custoner";
-
-function normalizeDate(dateString: string): string {
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return "Sin fecha";
-  }
-
-  return date.toLocaleDateString("es-SV", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+import { formatDateOnly } from "@/utils/formatDate";
 
 export default function CustomerPage() {
   const [customers, setCustomers] = React.useState<CustomerResponseDTO[]>([]);
@@ -175,7 +163,7 @@ export default function CustomerPage() {
                             {customer.phone || "Sin teléfono"}
                           </span>
                         </TableCell>
-                        <TableCell>{normalizeDate(customer.createdAt)}</TableCell>
+                        <TableCell>{formatDateOnly(customer.createdAt)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button size="sm" variant="outline" onClick={() => toast("Vista detalle pendiente")}> 

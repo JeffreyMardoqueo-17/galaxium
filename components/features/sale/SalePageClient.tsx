@@ -66,6 +66,7 @@ export default function SalePageClient({
   const [paymentMethodId, setPaymentMethodId] = React.useState(0);
   const [customerId, setCustomerId] = React.useState<number | null>(null);
   const [discount, setDiscount] = React.useState(0);
+  const [isDiscountPercentage, setIsDiscountPercentage] = React.useState(false);
   const [amountPaid, setAmountPaid] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -130,9 +131,12 @@ export default function SalePageClient({
 
   React.useEffect(() => {
     if (!customerSearch.trim()) {
-      setFilteredCustomers([]);
-      setShowCustomerDropdown(false);
-      setHighlightedCustomerIndex(-1);
+      if (showCustomerDropdown) {
+        setFilteredCustomers(customers);
+        setHighlightedCustomerIndex(0);
+      } else {
+        setFilteredCustomers([]);
+      }
       return;
     }
 
@@ -143,7 +147,7 @@ export default function SalePageClient({
     setFilteredCustomers(filtered);
     setShowCustomerDropdown(true);
     setHighlightedCustomerIndex(filtered.length > 0 ? 0 : -1);
-  }, [customerSearch, customers]);
+  }, [customerSearch, customers, showCustomerDropdown]);
 
   React.useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -344,7 +348,14 @@ export default function SalePageClient({
     [cart]
   );
 
-  const total = subTotal - discount;
+  const discountAmount = React.useMemo(() => {
+    if (isDiscountPercentage) {
+      return Math.round(subTotal * (discount / 100) * 100) / 100;
+    }
+    return discount;
+  }, [discount, isDiscountPercentage, subTotal]);
+
+  const total = subTotal - discountAmount;
   const changeAmount = amountPaid > total ? amountPaid - total : 0;
 
   async function handleSubmit() {
@@ -356,6 +367,7 @@ export default function SalePageClient({
       customerId: customerId || undefined,
       paymentMethodId,
       discount,
+      isDiscountPercentage,
       amountPaid: amountPaid || undefined,
       details: cart.map((x) => ({ productId: x.productId, quantity: x.quantity })),
     };
@@ -371,6 +383,7 @@ export default function SalePageClient({
       setCustomerId(null);
       setSelectedCustomerName("");
       setDiscount(0);
+      setIsDiscountPercentage(false);
       setAmountPaid(0);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al registrar la venta");
@@ -726,7 +739,13 @@ export default function SalePageClient({
                           setCustomerSearch(e.target.value);
                           setShowNewCustomerForm(false);
                         }}
-                        onFocus={() => customerSearch && setShowCustomerDropdown(true)}
+                        onFocus={() => {
+                          if (customers.length > 0) {
+                            setShowCustomerDropdown(true);
+                            setFilteredCustomers(customers);
+                            setHighlightedCustomerIndex(0);
+                          }
+                        }}
                         onKeyDown={handleCustomerSearchKeyDown}
                         role="combobox"
                         aria-expanded={showCustomerDropdown}
@@ -866,13 +885,23 @@ export default function SalePageClient({
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Descuento</label>
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-                        value={discount}
-                        onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder={isDiscountPercentage ? "0" : "0.00"}
+                          className="h-11 flex-1 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+                          value={discount}
+                          onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                        />
+                        <select
+                          value={isDiscountPercentage ? "percent" : "amount"}
+                          onChange={(e) => setIsDiscountPercentage(e.target.value === "percent")}
+                          className="h-11 rounded-xl border border-input bg-background px-2 text-sm text-foreground outline-none transition focus:border-primary"
+                        >
+                          <option value="amount">$</option>
+                          <option value="percent">%</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -896,8 +925,8 @@ export default function SalePageClient({
                       <span>{fmt.format(subTotal)}</span>
                     </div>
                     <div className="flex items-center justify-between text-muted-foreground">
-                      <span>Descuento</span>
-                      <span>-{fmt.format(discount)}</span>
+                      <span>Descuento {isDiscountPercentage ? `(${discount}%)` : ""}</span>
+                      <span>-{fmt.format(discountAmount)}</span>
                     </div>
                     <div className="my-3 h-px bg-border" />
                     <div className="flex items-center justify-between">

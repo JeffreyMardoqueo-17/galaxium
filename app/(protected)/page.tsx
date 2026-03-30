@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { dashboardService } from "@/services/dashboard.service";
+import { formatDate } from "@/utils/formatDate";
 
 import type {
   DashboardSalesAnalytics,
@@ -221,7 +222,7 @@ export default function DashboardPage() {
                     {summary.recentSales.map((sale) => (
                       <tr key={sale.saleId} className="border-t">
                         <td className="py-2">{sale.invoiceNumber || "N/A"}</td>
-                        <td className="py-2">{new Date(sale.saleDate).toLocaleString()}</td>
+                        <td className="py-2">{formatDate(sale.saleDate)}</td>
                         <td className="py-2">{sale.sellerName}</td>
                         <td className="py-2">{currencyFormatter.format(sale.total)}</td>
                       </tr>

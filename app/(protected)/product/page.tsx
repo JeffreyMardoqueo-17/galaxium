@@ -8,7 +8,9 @@ import {
   DollarSign,
   Eye,
   Filter,
+  ImageIcon,
   LayoutGrid,
+  LoaderCircle,
   Pencil,
   Plus,
   ScanLine,
@@ -35,9 +37,10 @@ import { PriceFormModal } from "@/components/features/products/PriceForm";
 import { ProductDetailModal } from "@/components/features/products/ProductVerMas";
 
 import { getCategories } from "@/services/category.service";
-import { createProduct, getProductsByFilter, updateProductPrice } from "@/services/product.service";
+import { createProduct, getProductsByFilter, getProductsWithPhotos, updateProductPrice } from "@/services/product.service";
 
 import type { CategoryRead } from "@/types/category";
+import type { ProductPhoto } from "@/types/product-photo";
 import type {
   ProductCreateRequest,
   ProductFilterRequest,
@@ -69,12 +72,57 @@ function getStockTone(product: ProductResponse): string {
   return "bg-emerald-100 text-emerald-700 border-emerald-200";
 }
 
+function getPrimaryPhotoUrl(photos: ProductPhoto[] | undefined): string | null {
+  const primaryPhoto = photos?.find((photo) => photo.isPrimary) ?? photos?.[0];
+  return primaryPhoto?.photoUrl?.trim() || null;
+}
+
+type LazyProductImageProps = {
+  productName: string;
+  photos?: ProductPhoto[];
+  isLoading: boolean;
+};
+
+function LazyProductImage({
+  productName,
+  photos,
+  isLoading,
+}: LazyProductImageProps) {
+  const primaryPhotoUrl = getPrimaryPhotoUrl(photos);
+
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted/40">
+      {primaryPhotoUrl ? (
+        <img
+          src={primaryPhotoUrl}
+          alt={productName}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      ) : isLoading ? (
+        <div className="flex h-full w-full items-center justify-center gap-2 text-sm text-muted-foreground">
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+          Cargando foto...
+        </div>
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
+          <ImageIcon className="h-8 w-8" />
+          <span className="text-sm">Sin foto</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProductsPage() {
   const router = useRouter();
 
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("table");
   const [products, setProducts] = React.useState<ProductResponse[]>([]);
   const [categories, setCategories] = React.useState<CategoryRead[]>([]);
+  const [cardPhotos, setCardPhotos] = React.useState<Record<number, ProductPhoto[]>>({});
+  const [loadingCardPhotos, setLoadingCardPhotos] = React.useState(false);
+  const [hasLoadedCardPhotos, setHasLoadedCardPhotos] = React.useState(false);
 
   const [loadingProducts, setLoadingProducts] = React.useState(false);
 
@@ -113,6 +161,14 @@ export default function ProductsPage() {
     void loadProducts(debouncedFilters);
   }, [debouncedFilters]);
 
+  React.useEffect(() => {
+    if (viewMode !== "cards" || products.length === 0 || hasLoadedCardPhotos || loadingCardPhotos) {
+      return;
+    }
+
+    void loadCardPhotos();
+  }, [hasLoadedCardPhotos, loadingCardPhotos, products.length, viewMode]);
+
   async function loadProducts(filter: ProductFilterRequest) {
     setLoadingProducts(true);
     try {
@@ -129,6 +185,8 @@ export default function ProductsPage() {
   async function handleProductCreate(product: ProductCreateRequest) {
     try {
       const created = await createProduct(product);
+      setHasLoadedCardPhotos(false);
+      setCardPhotos({});
       await loadProducts(debouncedFilters);
       return created?.id;
     } catch (error) {
@@ -148,6 +206,26 @@ export default function ProductsPage() {
         product.id === productId ? { ...product, ...updatedProduct } : product,
       ),
     );
+  }
+
+  async function loadCardPhotos() {
+    setLoadingCardPhotos(true);
+
+    try {
+      const response = await getProductsWithPhotos();
+      const nextPhotos = response.reduce<Record<number, ProductPhoto[]>>((acc, product) => {
+        acc[product.id] = product.photos ?? [];
+        return acc;
+      }, {});
+
+      setCardPhotos(nextPhotos);
+      setHasLoadedCardPhotos(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudieron cargar las fotos de los productos");
+    } finally {
+      setLoadingCardPhotos(false);
+    }
   }
 
   const categoryOptions = React.useMemo<ComboboxOption[]>(
@@ -540,6 +618,12 @@ export default function ProductsPage() {
                 return (
                   <Card key={product.id} className="border-border bg-card shadow-xs">
                     <CardContent className="space-y-4 pt-6">
+                      <LazyProductImage
+                        productName={product.name}
+                        photos={cardPhotos[product.id]}
+                        isLoading={loadingCardPhotos && !hasLoadedCardPhotos}
+                      />
+
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-semibold text-foreground">{product.name}</p>

@@ -84,8 +84,8 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                         <div
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-150 ${
                             isActive
-                              ? "border border-sidebar-border bg-sidebar-accent text-sidebar-foreground"
-                              : "bg-sidebar-foreground/10 text-sidebar-foreground/60 group-hover:bg-sidebar-foreground/18 group-hover:text-sidebar-foreground/90"
+                              ? "border border-sidebar-border bg-sidebar-accent text-sidebar-foreground shadow-sm"
+                              : "bg-sidebar-accent/75 text-sidebar-foreground/60 group-hover:bg-sidebar-accent group-hover:text-sidebar-foreground/90"
                           }`}
                         >
                           <Icon className="h-4 w-4" />
@@ -137,7 +137,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Cerrar sesión"
-              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl px-3 transition-colors duration-150"
+              className="rounded-xl px-3 text-red-600 transition-colors duration-150 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/15 dark:hover:text-red-300"
             >
               <LogOut className="h-4 w-4" />
               <span className="font-medium text-sm">Cerrar sesión</span>

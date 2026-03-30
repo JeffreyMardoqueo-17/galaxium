@@ -8,6 +8,7 @@ import { createCategory, getCategories } from "@/services/category.service";
 import type { CategoryRead } from "@/types/category";
 
 import { showToast } from "@/components/ui/modales/Toast";
+import { formatDateOnly } from "@/utils/formatDate";
 import { isUnauthorizedError } from "@/utils/getAddHeaders";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -312,7 +313,7 @@ export default function CategoryPage() {
                       <TableCell className="font-medium">{category.id}</TableCell>
                       <TableCell>{category.name}</TableCell>
                       <TableCell>{category.code || "N/A"}</TableCell>
-                      <TableCell>{category.createdAt ? new Date(category.createdAt).toLocaleDateString("es-SV") : "N/A"}</TableCell>
+                      <TableCell>{category.createdAt ? formatDateOnly(category.createdAt) : "N/A"}</TableCell>
                       <TableCell className="text-right">
                         <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
                           Disponible
